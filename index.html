@@ -104,6 +104,13 @@ h1,h2,h3,p{margin:0}
 .panel p.hi{color:var(--magenta)}
 .sw{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .sw span{font-size:13px;line-height:1.3}
+.vis{display:flex;flex-direction:column;gap:8px}
+.vis button{display:block;width:100%;min-height:52px;padding:12px 16px;border:1px solid var(--line);border-radius:20px;background:#000;color:var(--magenta);font:inherit;text-align:left;cursor:pointer}
+.vis button b{display:block;font-size:13px;font-weight:800}
+.vis button small{display:block;margin-top:2px;font-size:12px;line-height:1.4;color:var(--purple)}
+.vis button[aria-pressed="true"]{border-color:var(--magenta);background:var(--magenta);color:#000}
+.vis button[aria-pressed="true"] small{color:#000}
+.vis button[aria-disabled="true"]{opacity:.6;cursor:progress}
 
 /* nav (design system) */
 .nav{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:30;width:min(390px,calc(100% - 24px));height:var(--nav-h);
@@ -438,7 +445,7 @@ const S = {
   pings: store.get('pings', []),          // {venueId,ts,source,sent}
   simH: store.get('simH', 26), layer: 'live', dir: false, fake: store.get('fake', {}), recaps: store.get('recaps', []),
   selected: null, query: '', crowd: new Map(), lastUpdate: 0, online: navigator.onLine !== false, refreshFailed: false,
-  user: null, guest: store.get('guest', false), liveFailed: false
+  user: null, guest: store.get('guest', false), liveFailed: false, vis: {uid: null}
 };
 const save = k => store.set(k, S[k]);
 
@@ -954,12 +961,58 @@ $('#qclr').addEventListener('click', () => { S.query = ''; $('#q').value = ''; $
    ME
    ============================================================ */
 function sw(id, label, on) { return `<div class="sw"><span>${label}</span><button type="button" class="btn ${on ? '' : 'sec'} small" id="${id}" role="switch" aria-checked="${on}" style="min-width:76px">${on ? 'on' : 'off'}</button></div>`; }
+/* PARS-45: who can see my profile. Saved in profiles.visibility; the "profiles read" policy in schema.sql enforces it. */
+const VIS = [
+  ['public', 'everyone', 'anyone with a party animals account can see your profile.', 'anyone with an account can see your profile'],
+  ['friends', 'friends only', 'only people you have accepted as friends can see your profile.', 'only friends can see your profile'],
+  ['private', 'only me', 'nobody else can see your profile.', 'only you can see your profile']
+];
+function privacyPanel() {
+  if (!sb || !S.user) return '';
+  const p = S.vis;
+  const body = p.state === 'error'
+    ? `<p class="hi">couldn't load your privacy setting.</p><button type="button" class="btn sec" id="visRetry">try again</button>`
+    : p.state === 'loading'
+      ? '<p class="hi">loading your privacy setting</p>'
+      : `<div class="vis" id="visOpts" role="group" aria-label="Who can see your profile">${VIS.map(([k, t, d]) => `<button type="button" id="vis-${k}" data-vis="${k}" aria-pressed="${p.value === k}"${p.saving ? ' aria-disabled="true"' : ''}><b>${t}</b><small>${d}</small></button>`).join('')}</div>`;
+  return `<div class="panel"><h2>Privacy</h2>
+      <p>choose who can see your name and username.</p>
+      ${body}
+      <p>your check-ins and plans are never shown to anyone. they only count anonymously in crowd numbers.</p>
+    </div>`;
+}
+async function loadVisibility(force) {
+  if (!sb || !S.user) return;
+  const uid = S.user.id;
+  if (!force && S.vis.uid === uid) return;
+  const p = S.vis = {uid, state: 'loading', value: null, saving: false};
+  let row = null;
+  try { const {data, error} = await sb.from('profiles').select('visibility').eq('id', uid).maybeSingle(); if (!error) row = data; } catch (e) {}
+  if (S.vis !== p) return;                // logged out or switched account meanwhile
+  p.state = row ? 'ready' : 'error'; p.value = row ? row.visibility : null;
+  if (S.tab === 'me') renderMe();
+}
+async function setVisibility(value) {
+  const p = S.vis;
+  if (p.state !== 'ready' || p.saving || p.value === value) return;
+  if (navigator.onLine === false) return toast("you're offline · try again when you're back");
+  p.saving = true; renderMe();
+  let ok = false;
+  // .select().single() fails if no row changed, so a blocked update can't look like a success
+  try { const {data, error} = await sb.from('profiles').update({visibility: value}).eq('id', p.uid).select('visibility').single(); ok = !error && !!data && data.visibility === value; } catch (e) {}
+  if (S.vis !== p) return;
+  p.saving = false; if (ok) p.value = value;
+  if (S.tab === 'me') renderMe();
+  toast(ok ? VIS.find(o => o[0] === value)[3] : "couldn't save · try again");
+}
 function renderMe() {
   const v = S.party ? byId(S.party.venueId) : null;
+  const ae = document.activeElement, keepId = ae && ae.id && $('#me').contains(ae) ? ae.id : '';
+  loadVisibility();
   const acct = !sb ? '' : S.user
     ? `<div class="panel"><h2>Account</h2><p class="hi">logged in as ${esc(S.user.email || 'you')}</p><button type="button" class="btn sec" id="meOut">log out</button></div>`
     : `<div class="panel"><h2>Account</h2><p>not logged in. log in to check in and say where you are going.</p><button type="button" class="btn" id="meIn">log in</button><button type="button" class="btn sec" id="meUp">create an account</button></div>`;
-  $('#me').innerHTML = acct + `
+  $('#me').innerHTML = acct + privacyPanel() + `
     <div class="panel"><h2>Team</h2>
       <p>the people behind party animals.</p>
       <button type="button" class="btn" id="meTeam">meet the team</button>
@@ -1003,6 +1056,10 @@ function renderMe() {
   if (mi) mi.addEventListener('click', () => showAuth('login'));
   if (mu) mu.addEventListener('click', () => showAuth('signup'));
   if (mo) mo.addEventListener('click', logout);
+  const vo = $('#visOpts'), vr = $('#visRetry');
+  if (vo) vo.addEventListener('click', e => { const b = e.target.closest('[data-vis]'); if (b) setVisibility(b.dataset.vis); });
+  if (vr) vr.addEventListener('click', () => { loadVisibility(true); renderMe(); });
+  if (keepId) { const n = $('#' + keepId); if (n) n.focus(); }
   updateDemoPill();
 }
 async function wipe() {
@@ -1010,7 +1067,7 @@ async function wipe() {
     const {error} = await sb.rpc('delete_my_account');
     if (error) { toast("couldn't delete your account · try again"); return; }
     try { await sb.auth.signOut(); } catch (e) {}
-    S.user = null;
+    S.user = null; S.vis = {uid: null};
   }
   stopWatch(); store.clear();
   S.age = null; S.consent = false; S.party = null; S.going = {night:'', ids:{}}; S.pings = []; S.demo = true; S.sim = false; S.selected = null; S.fake = {}; S.recaps = []; S.simH = 26; S.layer = 'live'; S.dir = false; S.guest = false; slotKey = ''; stopPlay();
@@ -1019,7 +1076,7 @@ async function wipe() {
 async function logout() {
   if (S.party) endParty('stopped', true);
   try { await sb.auth.signOut(); } catch (e) {}
-  S.user = null; S.going = {night:'', ids:{}}; save('going'); S.pings = []; save('pings');
+  S.user = null; S.vis = {uid: null}; S.going = {night:'', ids:{}}; save('going'); S.pings = []; save('pings');
   S.guest = false; save('guest');
   toast('logged out'); updateAll(); showAuth('login');
 }
