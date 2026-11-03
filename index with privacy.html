@@ -1,0 +1,1399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<title>party animals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;800&display=swap" rel="stylesheet">
+<style>
+/* Brand is dark-only by design: black ground, magenta + purple. No light theme. */
+:root{
+  --black:#000000; --magenta:#DF40C6; --purple:#8C51F6; --yellow:#EEFF2B; --cyan:#19E6FF; --line:rgba(223,64,198,.25);
+  --nav-h:84px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);background:#000}
+body{margin:0;height:100%;background:#000;color:var(--magenta);
+  font-family:'Unbounded','Arial Black',system-ui,sans-serif;font-weight:400;
+  -webkit-text-size-adjust:100%;overscroll-behavior:none}
+button,input{font-family:inherit}
+button{-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible{outline:3px solid var(--purple);outline-offset:3px}
+.on-purple:focus-visible{outline-color:#000}
+ul{list-style:none;margin:0;padding:0}
+h1,h2,h3,p{margin:0}
+[hidden]{display:none!important}
+
+#app{position:relative;height:100%;max-width:480px;margin:0 auto;overflow:hidden;background:#000}
+
+/* header */
+.hdr{position:absolute;top:0;left:0;right:0;height:56px;z-index:20;display:flex;align-items:center;
+  justify-content:space-between;gap:8px;padding:0 16px;
+  background:linear-gradient(#000 70%,rgba(0,0,0,0))}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand b{font-weight:800;font-size:16px;letter-spacing:-.03em;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;height:32px;padding:0 14px;border-radius:999px;border:2px solid var(--purple);
+  background:#000;color:var(--purple);font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;max-width:60vw;overflow:hidden;text-overflow:ellipsis}
+.pill.mag{border-color:var(--magenta);color:var(--magenta)}
+
+/* screens */
+.screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  padding:72px 16px calc(var(--nav-h) + 44px)}
+.screen h1{font-size:12px;font-weight:400;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px}
+#screen-map{padding:0;overflow:hidden}
+
+/* buttons (design system) */
+.btn{min-width:180px;max-width:100%;height:52px;padding:0 28px;border:2px solid var(--magenta);border-radius:999px;
+  background:var(--magenta);color:#000;font-size:14px;font-weight:800;letter-spacing:-.01em;cursor:pointer;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn:active{border-color:var(--purple);background:var(--purple)}
+.btn.sec{background:#000;color:var(--magenta)}
+.btn.sec:active{border-color:var(--purple);color:var(--purple);background:#000}
+.btn.dark{background:#000;border-color:#000;color:var(--magenta)}
+.btn.dark[aria-pressed="true"]{background:var(--magenta);color:#000;border-color:#000}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.small{height:40px;min-width:0;padding:0 18px;font-size:12px}
+
+/* input field */
+.field{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.field label{font-size:12px}
+.field .box{display:flex;align-items:center;gap:12px;height:56px;padding:0 20px;border:2px solid var(--purple);border-radius:28px;background:#000}
+.field .box:focus-within{border-color:var(--magenta);box-shadow:0 0 0 4px rgba(223,64,198,.3)}
+.field input{flex:1;min-width:0;height:100%;padding:0;border:0;background:transparent;color:var(--magenta);font-size:14px;outline:none}
+.field input::placeholder{color:var(--purple);opacity:1}
+.field .clr{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--purple);background:#000;color:var(--purple);
+  font-size:14px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
+
+/* list item */
+.li{display:flex;align-items:center;gap:16px;width:100%;min-height:72px;padding:12px 20px 12px 12px;border:1px solid var(--line);
+  border-radius:36px;background:#000;color:var(--magenta);text-align:left;cursor:pointer}
+.li .ic{width:48px;height:48px;flex:none;border-radius:24px;background:#000;border:2px solid var(--lv,var(--purple));display:grid;place-items:center}
+.li .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.li .tx b{font-size:15px;font-weight:800;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.li .tx small{font-size:12px;color:var(--purple);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.li[aria-current="true"]{background:var(--magenta);border-color:var(--magenta);color:#000}
+.li[aria-current="true"] .ic{border-color:#000}
+.li[aria-current="true"] .tx small,.li[aria-current="true"] .tx small span{color:#000!important}
+.li[aria-current="true"]:focus-visible{outline-color:#000}
+.li:disabled{opacity:.4;cursor:not-allowed}
+#vlist{display:flex;flex-direction:column;gap:12px}
+
+/* card (design system) */
+.card{position:relative;background:var(--purple);border-radius:28px;padding:24px;display:flex;flex-direction:column;gap:18px;color:#000}
+.card .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.badge{display:inline-flex;align-items:center;height:32px;padding:0 14px;border-radius:999px;background:#000;color:var(--magenta);font-size:12px;font-weight:800;white-space:nowrap}
+.card h3{font-size:24px;font-weight:800;line-height:1;letter-spacing:-.03em;overflow-wrap:anywhere}
+.card .sub{font-size:13px;margin-top:6px}
+.card .meta{font-size:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.card .note{font-size:11px}
+.card .x{position:absolute;top:-14px;right:12px;width:44px;height:44px;border-radius:50%;border:2px solid var(--magenta);background:#000;
+  color:var(--magenta);font-size:20px;font-weight:800;cursor:pointer;display:grid;place-items:center;padding:0}
+
+/* panels */
+.panel{border:1px solid var(--line);border-radius:28px;padding:24px;display:flex;flex-direction:column;gap:16px;margin-bottom:16px}
+.panel h2{font-size:12px;font-weight:400;letter-spacing:.08em;text-transform:uppercase}
+.panel p{font-size:13px;line-height:1.5;color:var(--purple)}
+.panel p.hi{color:var(--magenta)}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sw span{font-size:13px;line-height:1.3}
+.vis{display:flex;flex-direction:column;gap:8px}
+.vis button{display:block;width:100%;min-height:52px;padding:12px 16px;border:1px solid var(--line);border-radius:20px;background:#000;color:var(--magenta);font:inherit;text-align:left;cursor:pointer}
+.vis button b{display:block;font-size:13px;font-weight:800}
+.vis button small{display:block;margin-top:2px;font-size:12px;line-height:1.4;color:var(--purple)}
+.vis button[aria-pressed="true"]{border-color:var(--magenta);background:var(--magenta);color:#000}
+.vis button[aria-pressed="true"] small{color:#000}
+.vis button[aria-disabled="true"]{opacity:.6;cursor:progress}
+
+/* nav (design system) */
+.nav{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:30;width:min(390px,calc(100% - 24px));height:var(--nav-h);
+  padding:0 12px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--magenta);border-radius:42px;background:#000}
+.nav button{flex:1 1 0;max-width:64px;min-width:0;height:60px;border-radius:30px;border:0;background:transparent;color:var(--purple);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:0}
+.nav button span{font-size:11px;font-weight:400}
+.nav button[aria-current="page"]{background:var(--magenta);color:#000}
+.nav button[aria-current="page"] span{font-weight:800}
+.nav .party{flex:none;width:60px;max-width:60px;border:2px solid var(--magenta);background:#000}
+.nav .party[aria-pressed="true"]{box-shadow:0 0 0 4px rgba(223,64,198,.3);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 9px rgba(223,64,198,.12)}}
+
+/* map */
+.map{position:absolute;inset:0;touch-action:none;overflow:hidden;cursor:grab;background:#000}
+.map:active{cursor:grabbing}
+#world{position:absolute;left:0;top:0;transform-origin:0 0;--inv:1}
+#world.anim{transition:transform .35s ease}
+#world svg{position:absolute;left:0;top:0;pointer-events:none}
+.mk{position:absolute;width:44px;height:44px;padding:0;border:0;background:none;cursor:pointer;display:grid;place-items:center;
+  transform:translate(-50%,-50%) scale(var(--inv));z-index:2}
+.mk i{display:block;width:var(--d,10px);height:var(--d,10px);border-radius:50%;border:2px solid var(--purple);background:#000;transition:width .4s,height .4s,background .4s,border-color .4s}
+.mk[data-l="x"]{--d:10px}
+.mk[data-l="c"]{--d:8px}.mk[data-l="c"] i{opacity:.4}
+.mk[data-l="1"]{--d:14px}.mk[data-l="2"]{--d:17px}.mk[data-l="3"]{--d:20px}.mk[data-l="4"]{--d:24px}.mk[data-l="5"]{--d:28px}
+.mk[data-l="1"] i,.mk[data-l="2"] i{background:var(--cyan);border-color:var(--cyan)}
+.mk[data-l="3"] i{background:var(--yellow);border-color:var(--yellow)}
+.mk[data-l="4"] i,.mk[data-l="5"] i{background:var(--magenta);border-color:var(--magenta)}
+.map[data-layer="going"] .mk[data-l="1"] i,.map[data-layer="going"] .mk[data-l="2"] i,.map[data-layer="going"] .mk[data-l="3"] i,.map[data-layer="going"] .mk[data-l="4"] i,.map[data-layer="going"] .mk[data-l="5"] i{background:var(--yellow);border-color:var(--yellow)}
+.mk[aria-pressed="true"]{z-index:5}
+.mk[aria-pressed="true"] i{box-shadow:0 0 0 4px rgba(223,64,198,.35),0 0 0 8px #000,0 0 0 10px var(--magenta)}
+.mk.here i{animation:pulse 2.4s ease-in-out infinite}
+.mk .nm{display:none;position:absolute;padding:4px 10px;border-radius:999px;background:#000;border:1px solid var(--magenta);color:var(--magenta);font-size:11px;font-weight:800;white-space:nowrap;pointer-events:none}
+.mk.vl .nm{display:block}
+.mk.nb .nm{top:calc(100% - 6px);left:50%;transform:translateX(-50%)}
+.mk.nt .nm{bottom:calc(100% - 6px);left:50%;transform:translateX(-50%)}
+.mk.nr .nm{left:calc(100% - 6px);top:50%;transform:translateY(-50%)}
+.mk.nl .nm{right:calc(100% - 6px);top:50%;transform:translateY(-50%)}
+.legend{position:absolute;left:14px;top:112px;z-index:10;display:flex;gap:10px;font-size:10px;color:var(--purple);white-space:nowrap;pointer-events:none;background:rgba(0,0,0,.65);padding:3px 8px;border-radius:10px}
+.legend span{display:inline-flex;align-items:center;gap:4px}
+.legend i{display:inline-block;width:6px;height:6px;border-radius:50%;border:2px solid var(--purple);box-sizing:content-box}
+.cap{position:absolute;left:14px;top:136px;z-index:10;font-size:10px;color:var(--purple);white-space:nowrap;pointer-events:none;background:rgba(0,0,0,.65);padding:2px 8px;border-radius:10px}
+.lm{position:absolute;width:28px;height:28px;transform:translate(-50%,-50%) scale(var(--inv));z-index:1;pointer-events:none;visibility:hidden;color:var(--cyan)}
+.lm.on{visibility:visible}
+.lm .ic{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#000;opacity:.9}
+.lm .ic svg{width:16px;height:16px;display:block}
+.lm .tx{position:absolute;display:none;padding:3px 8px;border-radius:999px;background:#000;border:1px solid rgba(25,230,255,.35);font-size:10px;font-weight:800;white-space:nowrap}
+.map.labels .lm.on .tx{display:block}
+.lm.r .tx{left:100%;margin-left:6px;top:50%;transform:translateY(-50%)}
+.lm.l .tx{right:100%;margin-right:6px;top:50%;transform:translateY(-50%)}
+.lm.b .tx{top:100%;margin-top:5px;left:50%;transform:translateX(-50%)}
+.lm.t .tx{bottom:100%;margin-bottom:5px;left:50%;transform:translateX(-50%)}
+.lm.nolabel .tx{display:none}
+.area{position:absolute;transform:translate(-50%,-50%) scale(var(--inv));z-index:1;pointer-events:none;visibility:hidden;color:var(--purple);opacity:.6;font-size:11px;font-weight:800;letter-spacing:.04em;white-space:nowrap}
+.area.on{visibility:visible}
+.ctls{position:absolute;right:12px;top:60px;z-index:10;display:flex;flex-direction:column;gap:8px}
+.ctls button{width:44px;height:44px;border-radius:50%;border:2px solid var(--magenta);background:#000;color:var(--magenta);font-size:20px;font-weight:800;cursor:pointer;padding:0;display:grid;place-items:center}
+.ctls button:active{border-color:var(--purple);color:var(--purple)}
+.layer{position:absolute;left:12px;top:60px;z-index:10;display:inline-flex;padding:3px;border:2px solid var(--purple);border-radius:999px;background:#000}
+.layer button{height:34px;padding:0 14px;border-radius:999px;border:0;background:transparent;color:var(--purple);font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+.layer button[aria-pressed="true"]{background:var(--magenta);color:#000}
+#heat circle{transition:r .6s ease}
+.dir{border:2px solid var(--magenta);border-radius:28px;background:#000;padding:12px 16px;display:flex;flex-direction:column;gap:6px}
+.dir .top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:800}
+.dir .x2{width:36px;height:36px;border-radius:50%;border:2px solid var(--magenta);background:#000;color:var(--magenta);font-size:18px;font-weight:800;cursor:pointer;padding:0;display:grid;place-items:center}
+.dir .tm{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dir .tm b{font-size:20px;font-weight:800;letter-spacing:-.03em;color:var(--yellow)}
+.dir input[type=range]{width:100%;height:28px;accent-color:#DF40C6;margin:0}
+.dir .chips{display:flex;gap:6px}
+.dir .chips button{flex:1;min-width:0;height:36px;padding:0 4px;border-radius:999px;border:2px solid var(--purple);background:#000;color:var(--purple);font-size:11px;font-weight:800;cursor:pointer}
+.dir p{font-size:11px;line-height:1.3;color:var(--purple);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dir .two{display:flex;gap:8px}
+.dir .two .btn{flex:1;min-width:0}
+.back{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;margin-bottom:16px;border-radius:999px;border:2px solid var(--purple);background:#000;color:var(--purple);font-size:12px;font-weight:800;cursor:pointer}
+.tlist{display:flex;flex-direction:column;gap:16px;padding-bottom:140px}
+.tbtn{width:100%;height:64px;padding:0 28px;border:2px solid var(--magenta);border-radius:999px;background:var(--magenta);color:#000;font-size:16px;font-weight:800;letter-spacing:-.01em;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbtn:active{border-color:var(--purple);background:var(--purple)}
+.tmsg{position:absolute;left:12px;right:12px;bottom:calc(var(--nav-h) + 28px);z-index:28;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 12px 12px 24px;min-height:72px;background:var(--purple);border-radius:36px;color:#000}
+.tmsg b{font-size:14px;font-weight:800;letter-spacing:-.01em;overflow-wrap:anywhere}
+.tmsg button{flex:none;width:48px;height:48px;padding:0;border:0;border-radius:24px;background:#000;color:var(--magenta);display:grid;place-items:center;cursor:pointer}
+.slot{position:absolute;left:12px;right:12px;bottom:calc(var(--nav-h) + 28px);z-index:25;display:flex;flex-direction:column;gap:12px}
+.banner{border:1px solid var(--magenta);border-radius:28px;background:#000;padding:16px 20px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.banner p{font-size:12px;line-height:1.5}
+.offline{position:absolute;left:12px;top:160px;z-index:26;max-width:calc(100% - 80px)}
+
+/* dialogs + toast */
+.scrim{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.78);display:flex;align-items:flex-end;justify-content:center;
+  padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px))}
+.dlg{width:100%;max-width:456px;max-height:calc(100% - 24px);overflow-y:auto;background:#000;border:2px solid var(--magenta);border-radius:28px;
+  padding:24px;display:flex;flex-direction:column;gap:16px}
+.dlg h2{font-size:18px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.dlg .b{display:flex;flex-direction:column;gap:12px}
+.dlg .b p{font-size:13px;line-height:1.55}
+.dlg .b p.dim{color:var(--purple)}
+.dlg .b ul{display:flex;flex-direction:column;gap:10px}
+.dlg .b li.pt{font-size:13px;line-height:1.5;padding-left:20px;position:relative}
+.dlg .b li.pt::before{content:"";position:absolute;left:0;top:.45em;width:10px;height:10px;border-radius:50%;background:var(--purple)}
+.dlg .a{display:flex;flex-direction:column;gap:10px}
+.dlg .a .btn{width:100%}
+.dlg .pick{display:flex;flex-direction:column;gap:10px}
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:90;
+  max-width:min(440px,calc(100% - 24px));padding:12px 20px;border-radius:999px;background:#000;border:2px solid var(--magenta);
+  color:var(--magenta);font-size:12px;font-weight:800;text-align:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.toast.on{opacity:1}
+.gate{position:fixed;inset:0;z-index:200;background:#000;display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+.gate .in{width:100%;max-width:400px;display:flex;flex-direction:column;gap:24px;align-items:flex-start}
+.gate h1{font-size:28px;font-weight:800;letter-spacing:-.03em;line-height:1.05;text-transform:none}
+.gate p{font-size:13px;line-height:1.55;color:var(--purple)}
+.gate .btns{display:flex;flex-direction:column;gap:10px;width:100%}
+.gate .btns .btn{width:100%}
+.gate form.in{gap:20px}
+.gate .ah{display:flex;flex-direction:column;gap:10px}
+.gate .authf{width:100%}
+.gate .authf .field:last-child{margin-bottom:0}
+.gate .err{font-size:12px;line-height:1.5;color:var(--yellow);font-weight:800}
+.gate .links{display:flex;gap:20px;flex-wrap:wrap}
+.lnk{background:none;border:0;padding:6px 0;color:var(--purple);font-size:12px;font-weight:800;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.spin{width:28px;height:28px;border-radius:50%;border:3px solid var(--purple);border-top-color:var(--magenta);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<noscript><p style="padding:24px">party animals needs javascript to run.</p></noscript>
+
+<div id="app" aria-live="off">
+  <header class="hdr">
+    <div class="brand" id="brand"></div>
+    <button type="button" class="pill" id="demoPill" hidden></button>
+  </header>
+
+  <section class="screen" id="screen-map" aria-label="Map">
+    <div class="map" id="map">
+      <div id="world"></div>
+      <div class="legend" id="legend" aria-label="Map legend"></div>
+      <div class="cap" id="cap"></div>
+      <div class="layer" role="group" aria-label="Map layer"><button type="button" data-layer="live" aria-pressed="true">live now</button><button type="button" data-layer="going" aria-pressed="false">going tonight</button></div>
+      <div class="ctls">
+        <button type="button" id="zin" aria-label="Zoom in">+</button>
+        <button type="button" id="zout" aria-label="Zoom out">&minus;</button>
+        <button type="button" id="zfit" aria-label="Show all venues">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="pill mag offline" id="offline" role="status" hidden>offline · map may be out of date</div>
+    <div class="slot" id="slot"></div>
+  </section>
+
+  <section class="screen" id="screen-venues" aria-label="Venues" hidden>
+    <h1>Venues</h1>
+    <div class="field">
+      <label for="q">find a spot</label>
+      <div class="box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8C51F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <input id="q" type="search" inputmode="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="venue, barrio or genre" maxlength="40">
+        <button type="button" class="clr" id="qclr" aria-label="Clear search" hidden>&times;</button>
+      </div>
+    </div>
+    <ul id="vlist"></ul>
+    <p id="vempty" hidden style="font-size:13px;line-height:1.5;color:var(--purple)"></p>
+  </section>
+
+  <section class="screen" id="screen-friends" aria-label="Friends" hidden>
+    <h1>Friends</h1>
+    <div class="card">
+      <div class="row"><span class="badge">coming soon</span></div>
+      <h3>see where your crew is going</h3>
+      <p class="sub">this test is about the live crowd map. friends comes next, once the map proves itself.</p>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-me" aria-label="Me" hidden>
+    <h1>Me</h1>
+    <div id="me"></div>
+  </section>
+
+  <section class="screen" id="screen-team" aria-label="Team" hidden>
+    <button type="button" class="back" id="teamBack"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>back</button>
+    <h1>Team</h1>
+    <div class="tlist" id="tlist"></div>
+  </section>
+  <div class="tmsg" id="tmsg" role="status" hidden><b id="tmsgT"></b><button type="button" id="tmsgX" aria-label="Close message"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DF40C6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+
+  <nav class="nav" id="nav" aria-label="Main"></nav>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div id="gate"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+'use strict';
+
+/* ============================================================
+   CONFIG
+   Paste your Supabase project values here (Project Settings > API).
+   Leave them empty to run the local demo: nothing leaves the device.
+   The anon / publishable key is safe in the browser: access is enforced by RLS (see schema.sql).
+   ============================================================ */
+const SUPABASE_URL = 'https://ahovlpxzkzcwuyotfolm.supabase.co';          // e.g. 'https://abcd1234.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_WCEM00FDvvisRiPhSQqz0A_PDcOZLdm';     // the "anon public" key (or "sb_publishable_..." key)
+let sb = null;
+try { if (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { sb = null; }
+const BACKEND_LOCAL = !sb;        // true = nothing leaves this device
+const N = 5;                      // k-anonymity: no counts/levels below N people
+const WINDOW_MIN = 45;            // crowd = pings in the last 45 min
+const PING_TTL_MIN = 120;         // pings deleted after 2 h
+const REPING_MS = 5 * 60 * 1000;  // foreground re-check cadence
+const MAX_PARTY_MS = 6 * 3600 * 1000;
+const MANUAL_PARTY_MS = 60 * 60 * 1000;
+const NIGHT_MULT = [0.3, 0.1, 0.2, 0.5, 0.8, 1, 1]; // night starting Sun..Sat (demo only)
+
+/* ============================================================
+   SEED VENUES  — PLACEHOLDER DATA. Coordinates are approximate and
+   genres/hours are typical guesses. Entry prices are deliberately null.
+   Verify every row on site before a real test (verified:false).
+   ============================================================ */
+const VENUES = [
+  {id:'kapital',  name:'Kapital',        barrio:'atocha',   genre:'pop · commercial',   type:'club', lat:40.4086, lng:-3.6921, r:80, pop:90, entry:null, hours:[23.5,30], verified:false},
+  {id:'joy',      name:'Joy Eslava',     barrio:'sol',      genre:'pop · latin',        type:'club', lat:40.4172, lng:-3.7075, r:70, pop:75, entry:null, hours:[23.5,30], verified:false},
+  {id:'barcelo',  name:'Teatro Barceló', barrio:'malasaña', genre:'house · electronic', type:'club', lat:40.4265, lng:-3.7013, r:70, pop:70, entry:null, hours:[23.5,30], verified:false},
+  {id:'tupper',   name:'Tupperware',     barrio:'malasaña', genre:'indie · pop-rock',   type:'bar',  lat:40.4258, lng:-3.7050, r:60, pop:45, entry:null, hours:[20,27],   verified:false},
+  {id:'vialactea',name:'La Vía Láctea',  barrio:'malasaña', genre:'rock · indie',       type:'bar',  lat:40.4266, lng:-3.7060, r:60, pop:35, entry:null, hours:[20,27],   verified:false},
+  {id:'equis',    name:'Sala Equis',     barrio:'lavapiés', genre:'alternative',        type:'club', lat:40.4124, lng:-3.7036, r:70, pop:40, entry:null, hours:[23.5,30], verified:false},
+  {id:'blackwhite',name:'Black & White', barrio:'chueca',   genre:'house · pop',        type:'club', lat:40.4236, lng:-3.6967, r:60, pop:55, entry:null, hours:[23.5,30], verified:false},
+  {id:'chicote',  name:'Museo Chicote',  barrio:'gran vía', genre:'cocktails · lounge', type:'bar',  lat:40.4200, lng:-3.7003, r:60, pop:30, entry:null, hours:[20,27],   verified:false},
+  {id:'deldiego', name:'Del Diego',      barrio:'chueca',   genre:'cocktails',          type:'bar',  lat:40.4202, lng:-3.6992, r:50, pop:25, entry:null, hours:[20,27],   verified:false},
+  {id:'istar',    name:'Ištar',          barrio:'salamanca',genre:'tbc',                type:'club', lat:40.4286, lng:-3.6876, r:70, pop:50, entry:null, hours:[23.5,30], verified:false},
+  {id:'houdini',  name:'Houdinni',       barrio:'salamanca',genre:'house · afro house', type:'club', lat:40.4287, lng:-3.6874, r:60, pop:55, entry:20,   hours:[23.5,30], nights:[2,3,4,5,6], verified:false},
+  {id:'laquefaltaba',name:'La Que Faltaba',barrio:'chamberí',genre:'tbc',               type:'bar',  lat:40.4376, lng:-3.6997, r:60, pop:40, entry:null, hours:[20,27],   verified:false},
+  {id:'cafeberlin',name:'Café Berlín',   barrio:'sol',      genre:'live music · soul · funk', type:'club', lat:40.4195, lng:-3.7080, r:60, pop:45, entry:null, hours:[20,30], verified:false},
+  {id:'fitz',     name:'Fitz',           barrio:'argüelles',genre:'tbc',                type:'club', lat:40.4247, lng:-3.7122, r:70, pop:50, entry:null, hours:[23.5,30], verified:false},
+  {id:'barbaraann',name:'Barbara Ann',   barrio:'chueca',   genre:'tbc',                type:'bar',  lat:40.4258, lng:-3.6959, r:50, pop:35, entry:null, hours:[20,27],   verified:false},
+  {id:'blondie',  name:'Blondie',        barrio:'recoletos',genre:'tbc',                type:'bar',  lat:40.4204, lng:-3.6900, r:50, pop:35, entry:null, hours:[20,27],   verified:false},
+  {id:'goyasocial',name:'Goya Social Club',barrio:'salamanca',genre:'house · techno',   type:'club', lat:40.4254, lng:-3.6829, r:70, pop:55, entry:null, hours:[24,30], nights:[5,6], verified:false},
+  {id:'mondodisko',name:'Mondo Disko',   barrio:'centro',   genre:'tbc',                type:'club', lat:40.4178, lng:-3.6989, r:60, pop:55, entry:null, hours:[23.5,30], verified:false},
+  {id:'barcosound',name:'Barco Sound House',barrio:'malasaña',genre:'live music · club',type:'club', lat:40.4233, lng:-3.7022, r:50, pop:45, entry:null, hours:[18,30],   nights:[3,4,5,6,0], verified:false}
+];
+const LANDMARKS = [
+  {n:'puerta del sol',lat:40.4168,lng:-3.7038,ic:'clock'},
+  {n:'palacio real',lat:40.4180,lng:-3.7143,ic:'crown'},
+  {n:'plaza de españa',lat:40.4232,lng:-3.7121,ic:'monument'},
+  {n:'cibeles',lat:40.4193,lng:-3.6932,ic:'fountain'},
+  {n:'retiro park',lat:40.4150,lng:-3.6830,ic:'tree'},
+  {n:'atocha station',lat:40.4065,lng:-3.6895,ic:'train'}
+];
+const BARRIOS = [ // approximate area labels
+  {n:'malasaña',lat:40.4284,lng:-3.7066},{n:'chueca',lat:40.4222,lng:-3.6948},{n:'lavapiés',lat:40.4085,lng:-3.7025},
+  {n:'salamanca',lat:40.4300,lng:-3.6790},{n:'chamberí',lat:40.4352,lng:-3.7040}
+];
+const PARKS = [{lat1:40.4212,lng1:-3.6892,lat2:40.4078,lng2:-3.6765}]; // retiro, approximate
+const LM_ICONS = {
+  clock:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',
+  screen:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  monument:'<path d="M12 3v3M9.5 6h5l1 12h-7zM6 21h12"/>',
+  metro:'<circle cx="12" cy="12" r="8"/><path d="M8 16V9l4 4 4-4v7"/>',
+  fountain:'<path d="M12 4v5M8 7c1 2 3 2 4 2s3 0 4-2M4 13h16M6 13l1 6h10l1-6"/>',
+  train:'<rect x="6" y="4" width="12" height="13" rx="3"/><path d="M6 11h12M9 21l2-4M15 21l-2-4"/>',
+  crown:'<path d="M4 18L3 8l5 4 4-7 4 7 5-4-1 10zM4 21h16"/>',
+  plaza:'<rect x="4" y="4" width="16" height="16" rx="1"/><rect x="9" y="9" width="6" height="6"/>',
+  arch:'<path d="M3 9h18M5 9v12M19 9v12M9 21v-5a3 3 0 016 0v5M12 5v4"/>',
+  tree:'<circle cx="12" cy="9" r="5"/><path d="M12 14v7M9 21h6"/>'
+};
+
+const ROADS = [ // schematic, approximate
+  [[40.4232,-3.7121],[40.4201,-3.7059],[40.4197,-3.6975],[40.4193,-3.6932]],  // gran vía → alcalá
+  [[40.4168,-3.7038],[40.4193,-3.6932]],                                      // alcalá
+  [[40.4168,-3.7038],[40.4125,-3.6985],[40.4065,-3.6895]],                    // atocha
+  [[40.4193,-3.6932],[40.4130,-3.6915],[40.4065,-3.6895]],                    // prado
+  [[40.4460,-3.6905],[40.4300,-3.6895],[40.4193,-3.6932]]                     // castellana
+];
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+const byId = id => VENUES.find(v => v.id === id);
+const hash = str => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+const rnd = seed => { let t = (seed + 0x6D2B79F5) >>> 0; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+const fmtH = h => { const hh = Math.floor(h) % 24, mm = Math.round((h - Math.floor(h)) * 60); return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0'); };
+const hhmm = ts => new Date(ts).toLocaleTimeString('en-GB', {timeZone:'Europe/Madrid', hour:'2-digit', minute:'2-digit'});
+function distM(a, b, c, d) {
+  const R = 6371000, toR = Math.PI / 180, dLat = (c - a) * toR, dLng = (d - b) * toR;
+  const x = Math.sin(dLat/2)**2 + Math.cos(a*toR) * Math.cos(c*toR) * Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+
+/* storage: localStorage when allowed, in-memory fallback (private mode, blocked storage) */
+const store = (() => {
+  let persistent = false;
+  try { localStorage.setItem('pa:t', '1'); localStorage.removeItem('pa:t'); persistent = true; } catch (e) {}
+  const mem = {};
+  return {
+    persistent,
+    get(k, d) { try { const raw = persistent ? localStorage.getItem('pa:' + k) : mem[k]; return raw == null ? d : JSON.parse(raw); } catch (e) { return d; } },
+    set(k, v) { try { const raw = JSON.stringify(v); if (persistent) localStorage.setItem('pa:' + k, raw); else mem[k] = raw; } catch (e) {} },
+    clear() { try { if (persistent) Object.keys(localStorage).filter(k => k.startsWith('pa:')).forEach(k => localStorage.removeItem(k)); } catch (e) {} Object.keys(mem).forEach(k => delete mem[k]); }
+  };
+})();
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const S = {
+  tab: 'map',
+  age: store.get('age', null),            // true | false | null
+  consent: store.get('consent', false),
+  demo: store.get('demo', true),
+  sim: store.get('sim', false),
+  party: store.get('party', null),        // {venueId,startedAt,lastPing,source,expiresAt,misses,errs}
+  going: store.get('going', {night:'', ids:{}}),
+  pings: store.get('pings', []),          // {venueId,ts,source,sent}
+  simH: store.get('simH', 26), layer: 'live', dir: false, fake: store.get('fake', {}), recaps: store.get('recaps', []),
+  selected: null, query: '', crowd: new Map(), lastUpdate: 0, online: navigator.onLine !== false, refreshFailed: false,
+  user: null, guest: store.get('guest', false), liveFailed: false, vis: {uid: null}
+};
+const save = k => store.set(k, S[k]);
+
+/* ============================================================
+   TIME (Europe/Madrid, night boundary at 06:00)
+   ============================================================ */
+const MAD = new Intl.DateTimeFormat('en-GB', {timeZone:'Europe/Madrid', year:'numeric', month:'2-digit', day:'2-digit', weekday:'short', hour:'2-digit', minute:'2-digit', hourCycle:'h23'});
+const DOW = {Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6};
+function madrid() {
+  if (S.sim) { const hs = clamp(S.simH, 20, 29.5); return {h: hs % 24, hs, nightDow:6, nightKey:'sim', label:'sat ' + fmtH(hs % 24), sim:true}; }
+  try {
+    const p = {}; MAD.formatToParts(new Date()).forEach(x => p[x.type] = x.value);
+    const h = (+p.hour) + (+p.minute) / 60, dow = DOW[p.weekday], early = h < 6;
+    if (isNaN(h) || dow == null) throw new Error('time');
+    const d = new Date(Date.UTC(+p.year, +p.month - 1, +p.day - (early ? 1 : 0)));
+    return {h, hs: early ? h + 24 : h, nightDow: early ? (dow + 6) % 7 : dow, nightKey: d.toISOString().slice(0, 10), label: p.hour + ':' + p.minute, sim:false};
+  } catch (e) {
+    const d = new Date(), h = d.getHours() + d.getMinutes() / 60, early = h < 6;
+    return {h, hs: early ? h + 24 : h, nightDow: d.getDay(), nightKey: d.toISOString().slice(0, 10), label: d.toTimeString().slice(0, 5), sim:false};
+  }
+}
+
+/* ============================================================
+   DATA LAYER — local demo or Supabase.
+   Live: submitPing = insert into `pings` (RLS: insert-only), getCrowd = rpc
+   `get_crowd` (only venues with >= N people get a number). Raw pings are never readable.
+   ============================================================ */
+async function fetchLive() {
+  if (!sb) return null;
+  try {
+    const {data, error} = await sb.rpc('get_crowd'); if (error) throw error;
+    S.liveFailed = false; return new Map((data || []).map(r => [r.venue_id, r]));
+  } catch (e) {
+    console.warn('get_crowd failed', e);
+    if (!S.liveFailed) toast("couldn't reach the server · showing demo only");
+    S.liveFailed = true; return new Map();
+  }
+}
+const Api = {
+  async getCrowd() {
+    const now = madrid(), out = new Map(), mult = NIGHT_MULT[now.nightDow];
+    const bucket = Math.floor(Date.now() / 120000), gb = Math.floor(Date.now() / 600000), cutoff = Date.now() - WINDOW_MIN * 60000;
+    const live = await fetchLive();
+    for (const v of VENUES) {
+      const [o, c] = v.hours;
+      const open = now.hs >= o && now.hs <= c && !(v.type === 'club' && mult < 0.4) && (!v.nights || v.nights.includes(now.nightDow));
+      let count = 0;
+      if (open && S.demo) {
+        const center = v.type === 'club' ? 26.5 : 24.2, sigma = v.type === 'club' ? 2.0 : 2.6;
+        const g = Math.exp(-0.5 * ((now.hs - center) / sigma) ** 2);
+        count = v.pop * mult * g * (0.88 + 0.24 * rnd(hash(v.id) + bucket));
+      }
+      const lv = live ? (live.get(v.id) || {}) : null;
+      if (open) count += lv ? (lv.crowd || 0) : S.pings.filter(p => p.venueId === v.id && p.ts >= cutoff).reduce((a, p) => a + (p.source === 'geo' ? 1 : 0.5), 0);
+      if (open) count += (S.fake[v.id] || []).filter(f => f.ts >= cutoff).reduce((a, f) => a + f.n, 0);
+      let going = 0;
+      if (S.demo) going = Math.round(v.pop * mult * 0.5 * (0.9 + 0.2 * rnd(hash(v.id + 'g') + gb)));
+      if (lv) going += lv.going || 0;
+      else if (S.going.night === now.nightKey && S.going.ids[v.id]) going += 1;
+      out.set(v.id, {open, count: Math.floor(count), going});
+    }
+    return out;
+  },
+  async submitPing(p) {
+    if (navigator.onLine === false) throw new Error('offline');
+    if (!sb) return true;
+    if (!S.user) throw new Error('auth');
+    const {error} = await sb.from('pings').insert({venue_id: p.venueId, source: p.source});
+    if (error) throw error;
+    return true;
+  },
+  async setGoing(id, on) {
+    if (!sb || !S.user) return;
+    const q = on ? sb.from('going').insert({venue_id: id}) : sb.from('going').delete().eq('venue_id', id).eq('user_id', S.user.id);
+    const {error} = await q;
+    if (error && error.code !== '23505') throw error; // 23505 = already marked as going
+  }
+};
+
+const levelOf = c => c < N ? null : c < 10 ? 1 : c < 20 ? 2 : c < 35 ? 3 : c < 60 ? 4 : 5;
+const LABELS = [null, 'quiet', 'warming up', 'filling up', 'busy now', 'packed'];
+const HUE = {1:'var(--cyan)', 2:'var(--cyan)', 3:'var(--yellow)', 4:'var(--magenta)', 5:'var(--magenta)'};
+const HEXHUE = {cyan:'#19E6FF', yellow:'#EEFF2B', magenta:'#DF40C6'};
+const hueOf = L => L ? HUE[L] : 'var(--purple)';
+const hexOf = (L, layer) => layer === 'going' ? HEXHUE.yellow : L ? (L <= 2 ? HEXHUE.cyan : L === 3 ? HEXHUE.yellow : HEXHUE.magenta) : '#8C51F6';
+function updateLegend() {
+  const lg = $('#legend'); if (!lg) return;
+  lg.innerHTML = S.layer === 'going'
+    ? '<span><i style="background:#EEFF2B;border-color:#EEFF2B"></i>going · bigger = more</span><span><i></i>few</span>'
+    : '<span><i style="background:#19E6FF;border-color:#19E6FF"></i>quiet</span><span><i style="background:#EEFF2B;border-color:#EEFF2B"></i>filling</span><span><i style="background:#DF40C6;border-color:#DF40C6"></i>busy</span><span><i></i>no signal</span>';
+}
+function mapStatus(v) {
+  if (S.layer === 'going') { const c = S.crowd.get(v.id), L = c ? levelOf(c.going) : null; return {level: L, key: L ? String(L) : 'x', label: L ? 'going: ' + LABELS[L] : 'few going'}; }
+  return status(v);
+}
+function status(v) {
+  const c = S.crowd.get(v.id);
+  if (!c) return {label:'loading', level:null, key:'x', c:{open:true,count:0,going:0}};
+  if (!c.open) return {label:'closed', level:null, key:'c', c};
+  const L = levelOf(c.count);
+  return L ? {label:LABELS[L], level:L, key:String(L), c} : {label:'no signal', level:null, key:'x', c};
+}
+
+/* ============================================================
+   ICONS
+   ============================================================ */
+const paw = (w, h) => `<svg width="${w}" height="${h}" viewBox="0 0 200 160" aria-hidden="true"><g fill="#DF40C6"><circle cx="39.71" cy="73.16" r="19"/><circle cx="75.28" cy="38.81" r="19"/><circle cx="124.72" cy="38.81" r="19"/><circle cx="160.29" cy="73.16" r="19"/></g><circle cx="100" cy="100" r="40" fill="#8C51F6"/></svg>`;
+const ico = d => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const chev = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M9 6l6 6-6 6"/></svg>`;
+const ICONS = {
+  map: ico('<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/>'),
+  venues: ico('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>'),
+  friends: ico('<circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/>'),
+  me: ico('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>')
+};
+
+/* ============================================================
+   TOAST / DIALOG
+   ============================================================ */
+let toastT;
+function placeToast() {
+  const sl = $('#slot'), extra = (S.tab === 'map' && sl && sl.offsetHeight) ? sl.offsetHeight + 12 : 0;
+  $('#toast').style.bottom = `calc(var(--nav-h) + 28px + ${extra}px + env(safe-area-inset-bottom,0px))`;
+}
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  placeToast();
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 3200);
+}
+let dlg = null;
+function dialog({title, build, actions = [], dismissible = true}) {
+  closeDialog(true);
+  const lastFocus = document.activeElement;
+  const scrim = document.createElement('div'); scrim.className = 'scrim';
+  scrim.innerHTML = `<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-t"><h2 id="dlg-t">${esc(title)}</h2><div class="b"></div><div class="a"></div></div>`;
+  const box = scrim.firstChild, body = $('.b', box), act = $('.a', box);
+  if (build) build(body);
+  actions.forEach(a => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (a.kind === 'pri' ? '' : ' sec'); b.textContent = a.label;
+    b.addEventListener('click', () => { if (a.close !== false) closeDialog(); if (a.onClick) a.onClick(); });
+    act.appendChild(b);
+  });
+  scrim.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && dismissible) { e.stopPropagation(); closeDialog(); return; }
+    if (e.key === 'Tab') {
+      const f = [...box.querySelectorAll('button:not([disabled])')]; if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+  if (dismissible) scrim.addEventListener('pointerdown', e => { if (e.target === scrim) closeDialog(); });
+  document.body.appendChild(scrim); $('#app').inert = true;
+  dlg = {scrim, lastFocus};
+  const f = box.querySelector('.pick button, .a button'); if (f) f.focus();
+  return box;
+}
+function closeDialog(silent) {
+  if (!dlg) return;
+  const {scrim, lastFocus} = dlg; dlg = null; scrim.remove(); $('#app').inert = false;
+  if (!silent && lastFocus && lastFocus.focus && document.contains(lastFocus)) lastFocus.focus();
+}
+
+/* ============================================================
+   HEADER / NAV
+   ============================================================ */
+$('#brand').innerHTML = `<button type="button" id="brandBtn" aria-label="Meet the team" style="display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;color:inherit;cursor:pointer;font:inherit">${paw(30, 24)}<b>party animals</b></button>`;
+const NAV = [['map','map'],['venues','venues'],['party','party'],['friends','friends'],['me','me']];
+$('#nav').innerHTML = NAV.map(([id, label]) => id === 'party'
+  ? `<button type="button" class="party" id="partyBtn" aria-label="Party mode" aria-pressed="false">${paw(34, 27)}</button>`
+  : `<button type="button" data-tab="${id}">${ICONS[id]}<span>${label}</span></button>`).join('');
+$('#brandBtn').addEventListener('click', () => setTab('team'));
+$('#nav').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) setTab(b.dataset.tab); });
+$('#partyBtn').addEventListener('click', onPartyButton);
+
+function setTab(t) {
+  S.tab = t;
+  ['map','venues','friends','me','team'].forEach(id => { $('#screen-' + id).hidden = id !== t; });
+  const cur = t === 'team' ? 'me' : t;
+  document.querySelectorAll('#nav [data-tab]').forEach(b => {
+    const on = b.dataset.tab === cur; if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+  $('#nav').setAttribute('aria-label', 'Main, ' + t + ' selected');
+  if (t === 'map') requestAnimationFrame(() => { sizeMap(); renderSlot(); });
+  if (t === 'me') renderMe();
+  if (t === 'team') { S.teamSel = null; renderTeam(); } else $('#tmsg').hidden = true;
+  if (t === 'venues') renderList(true);
+  const sc = $('#screen-' + t); if (sc && t !== 'map') sc.scrollTop = 0;
+}
+
+/* ============================================================
+   MAP (schematic: the published page can't load map tiles)
+   ============================================================ */
+const mapEl = $('#map'), world = $('#world');
+const PAD = 90, MLAT = 110950, MLNG = 111320 * Math.cos(40.42 * Math.PI / 180);
+const pts = VENUES.concat(LANDMARKS);
+const minLat = Math.min(...pts.map(p => p.lat)), maxLat = Math.max(...pts.map(p => p.lat));
+const minLng = Math.min(...pts.map(p => p.lng)), maxLng = Math.max(...pts.map(p => p.lng));
+const PPM = (1000 - 2 * PAD) / ((maxLng - minLng) * MLNG);
+const WW = 1000, WH = Math.round((maxLat - minLat) * MLAT * PPM + 2 * PAD);
+const proj = (lat, lng) => ({x: PAD + (lng - minLng) * MLNG * PPM, y: PAD + (maxLat - lat) * MLAT * PPM});
+const view = {s:1, s0:1, tx:0, ty:0};
+const mk = {}, lmEls = [], areaEls = [], vPos = {};
+
+function buildMap() {
+  world.style.width = WW + 'px'; world.style.height = WH + 'px';
+  const roads = ROADS.map(r => `<polyline points="${r.map(([a, b]) => { const p = proj(a, b); return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ')}" fill="none" stroke="#8C51F6" stroke-opacity=".16" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
+  const heat = VENUES.map(v => { const p = proj(v.lat, v.lng); return `<circle data-h="${v.id}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="0" fill="#8C51F6" fill-opacity=".28"/>`; }).join('');
+  const core = VENUES.map(v => { const p = proj(v.lat, v.lng); return `<circle data-c="${v.id}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="0" fill="#DF40C6" fill-opacity=".5"/>`; }).join('');
+  const parks = PARKS.map(k => { const a = proj(k.lat1, k.lng1), b = proj(k.lat2, k.lng2); return `<rect x="${a.x.toFixed(1)}" y="${a.y.toFixed(1)}" width="${(b.x - a.x).toFixed(1)}" height="${(b.y - a.y).toFixed(1)}" rx="24" fill="#19E6FF" fill-opacity=".07"/>`; }).join('');
+  world.innerHTML = `<svg width="${WW}" height="${WH}" height="${WH}" viewBox="0 0 ${WW} ${WH}" aria-hidden="true"><defs><filter id="blur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="14"/></filter></defs>${parks}${roads}<g filter="url(#blur)" id="heat">${heat}${core}</g></svg>`;
+  BARRIOS.forEach(l => { const p = proj(l.lat, l.lng), d = document.createElement('div'); d.className = 'area'; d.textContent = l.n; d.style.left = p.x + 'px'; d.style.top = p.y + 'px'; world.appendChild(d); areaEls.push({el: d, p}); });
+  LANDMARKS.forEach(l => { const p = proj(l.lat, l.lng), d = document.createElement('div'); d.className = 'lm'; d.innerHTML = `<span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LM_ICONS[l.ic] || ''}</svg></span><span class="tx">${esc(l.n)}</span>`; d.style.left = p.x + 'px'; d.style.top = p.y + 'px'; world.appendChild(d); lmEls.push({el: d, p}); });
+  VENUES.forEach(v => {
+    const p = proj(v.lat, v.lng), b = document.createElement('button');
+    b.type = 'button'; b.className = 'mk'; b.dataset.id = v.id; b.dataset.l = 'x'; b.style.left = p.x + 'px'; b.style.top = p.y + 'px';
+    b.setAttribute('aria-pressed', 'false'); b.setAttribute('aria-label', v.name);
+    b.innerHTML = `<i></i><span class="nm">${esc(v.name)}</span>`;
+    world.appendChild(b); mk[v.id] = b; vPos[v.id] = p;
+  });
+}
+let layoutQ = false, lastLayoutS = 0;
+function scheduleLayout() { if (layoutQ) return; layoutQ = true; requestAnimationFrame(() => { layoutQ = false; layoutLabels(); }); }
+function layoutLabels() {
+  const s = view.s; lastLayoutS = s;
+  const rects = [], R = (cx, cy, w, h) => ({x1: cx - w / 2, y1: cy - h / 2, x2: cx + w / 2, y2: cy + h / 2});
+  const hit = (a, b) => !(a.x2 <= b.x1 || a.x1 >= b.x2 || a.y2 <= b.y1 || a.y1 >= b.y2);
+  const free = r => !rects.some(o => hit(r, o));
+  VENUES.forEach(v => { const p = vPos[v.id]; rects.push(R(p.x * s, p.y * s, 26, 26)); });
+  const showAll = mapEl.classList.contains('labels');
+  [...VENUES].sort((a, b) => (b.id === S.selected) - (a.id === S.selected)).forEach(v => {
+    const b = mk[v.id], p = vPos[v.id], cx = p.x * s, cy = p.y * s, sel = v.id === S.selected;
+    b.classList.remove('vl', 'nb', 'nt', 'nr', 'nl');
+    if (!sel && !showAll) return;
+    const nm = b.querySelector('.nm'); b.classList.add('vl');
+    const w = nm.offsetWidth + 6, h = 24;
+    const opts = [['nb', cx, cy + 27], ['nt', cx, cy - 27], ['nr', cx + 16 + w / 2, cy], ['nl', cx - 16 - w / 2, cy]];
+    let placed = false;
+    for (const [c, x, y] of opts) { const r = R(x, y, w, h); if (free(r)) { rects.push(r); b.classList.add(c); placed = true; break; } }
+    if (!placed) { if (sel) { b.classList.add('nb'); rects.push(R(cx, cy + 27, w, h)); } else b.classList.remove('vl'); }
+  });
+  lmEls.forEach(({el, p}) => {
+    const cx = p.x * s, cy = p.y * s, icon = R(cx, cy, 28, 28);
+    el.classList.remove('on', 'r', 'l', 'b', 't', 'nolabel');
+    if (!free(icon)) return;                       // never sit on a venue or another landmark
+    rects.push(icon);
+    el.classList.add('on');
+    if (!mapEl.classList.contains('labels')) { el.classList.add('nolabel'); return; }
+    const tx = el.querySelector('.tx'); el.style.visibility = 'hidden'; tx.style.display = 'block';
+    const w = tx.offsetWidth + 8, h = 24;
+    const opts = [['r', cx + 14 + 8 + w / 2, cy], ['l', cx - 14 - 8 - w / 2, cy], ['b', cx, cy + 14 + 8 + h / 2], ['t', cx, cy - 14 - 8 - h / 2]];
+    let placed = false;
+    for (const [c, x, y] of opts) { const r = R(x, y, w, h); if (free(r)) { rects.push(r); el.classList.add(c); placed = true; break; } }
+    tx.style.display = ''; el.style.visibility = '';
+    if (!placed) el.classList.add('nolabel', 'r');
+  });
+  areaEls.forEach(({el, p}) => {
+    const cx = p.x * s, cy = p.y * s; el.classList.remove('on'); if (s >= view.s0 * 2.6) return; el.style.visibility = 'hidden';
+    const w = el.offsetWidth + 10, h = 20;
+    for (const [dx, dy] of [[0, 0], [0, -22], [0, 22], [-w * 0.6, 0], [w * 0.6, 0]]) {
+      const r = R(cx + dx, cy + dy, w, h); if (free(r)) { rects.push(r); el.style.left = (p.x + dx / s) + 'px'; el.style.top = (p.y + dy / s) + 'px'; el.classList.add('on'); break; }
+    }
+    el.style.visibility = '';
+  });
+}
+function applyView(anim) {
+  if (anim) { world.classList.add('anim'); setTimeout(() => world.classList.remove('anim'), 420); }
+  world.style.transform = `translate(${view.tx}px,${view.ty}px) scale(${view.s})`;
+  world.style.setProperty('--inv', String(1 / view.s));
+  mapEl.classList.toggle('labels', view.s >= view.s0 * 1.8);
+  const ht = $('#heat'); if (ht) ht.style.opacity = String(clamp(1 - (view.s / view.s0 - 1) * 0.14, 0.35, 1));
+  if (Math.abs(view.s - lastLayoutS) > 1e-4) scheduleLayout();
+}
+function clampView() {
+  const r = mapEl.getBoundingClientRect();
+  view.tx = clamp(view.tx, 80 - WW * view.s, r.width - 80);
+  view.ty = clamp(view.ty, 80 - WH * view.s, r.height - 80);
+}
+function sizeMap(keep) {
+  const r = mapEl.getBoundingClientRect(); if (!r.width || !r.height) return;
+  const availH = r.height - 64 - 160, s0 = Math.min((r.width - 64) / WW, Math.max(availH, 200) / WH);
+  const ratio = keep ? view.s / view.s0 : 1; view.s0 = s0;
+  if (!keep) { view.s = s0; view.tx = (r.width - 64 - WW * s0) / 2; view.ty = 64 + (Math.max(availH, 200) - WH * s0) / 2; }
+  else { view.s = clamp(s0 * ratio, s0 * 0.8, s0 * 6); clampView(); }
+  applyView();
+}
+function zoomAt(f, cx, cy, anim) {
+  const ns = clamp(view.s * f, view.s0 * 0.8, view.s0 * 6), k = ns / view.s;
+  view.tx = cx - (cx - view.tx) * k; view.ty = cy - (cy - view.ty) * k; view.s = ns; clampView(); applyView(anim);
+}
+function focusOn(v, anim = true) {
+  const r = mapEl.getBoundingClientRect(), p = proj(v.lat, v.lng);
+  view.s = Math.max(view.s, view.s0 * 2.6);
+  view.tx = r.width / 2 - p.x * view.s; view.ty = r.height * 0.34 - p.y * view.s; clampView(); applyView(anim);
+}
+$('#zin').addEventListener('click', () => { const r = mapEl.getBoundingClientRect(); zoomAt(1.5, r.width / 2, r.height / 2, true); });
+$('#zout').addEventListener('click', () => { const r = mapEl.getBoundingClientRect(); zoomAt(1 / 1.5, r.width / 2, r.height / 2, true); });
+$('#zfit').addEventListener('click', () => { sizeMap(false); world.classList.add('anim'); setTimeout(() => world.classList.remove('anim'), 420); });
+mapEl.addEventListener('wheel', e => { e.preventDefault(); const r = mapEl.getBoundingClientRect(); zoomAt(e.deltaY < 0 ? 1.18 : 1 / 1.18, e.clientX - r.left, e.clientY - r.top); }, {passive:false});
+
+const ptrs = new Map(); let drag = null, pinch = null, moved = false, captured = null;
+const pinchState = () => { const [a, b] = [...ptrs.values()], r = mapEl.getBoundingClientRect(); return {d: Math.hypot(a.x - b.x, a.y - b.y) || 1, cx: (a.x + b.x) / 2 - r.left, cy: (a.y + b.y) / 2 - r.top}; };
+mapEl.addEventListener('pointerdown', e => {
+  if (e.target.closest('.ctls, .layer')) return;
+  ptrs.set(e.pointerId, {x: e.clientX, y: e.clientY});
+  if (ptrs.size === 1) { moved = false; drag = {x: e.clientX, y: e.clientY, tx: view.tx, ty: view.ty}; }
+  else if (ptrs.size === 2) { moved = true; drag = null; const st = pinchState(); pinch = {d: st.d, s: view.s, tx: view.tx, ty: view.ty, cx: st.cx, cy: st.cy}; }
+});
+mapEl.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.set(e.pointerId, {x: e.clientX, y: e.clientY});
+  if (ptrs.size === 2 && pinch) {
+    const st = pinchState(), ns = clamp(pinch.s * st.d / pinch.d, view.s0 * 0.8, view.s0 * 6), wx = (pinch.cx - pinch.tx) / pinch.s, wy = (pinch.cy - pinch.ty) / pinch.s;
+    view.s = ns; view.tx = st.cx - wx * ns; view.ty = st.cy - wy * ns; clampView(); applyView();
+  } else if (drag && ptrs.size === 1) {
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!moved && Math.hypot(dx, dy) > 6) { moved = true; try { mapEl.setPointerCapture(e.pointerId); captured = e.pointerId; } catch (_) {} }
+    if (moved) { view.tx = drag.tx + dx; view.ty = drag.ty + dy; clampView(); applyView(); }
+  }
+});
+const endPtr = e => {
+  ptrs.delete(e.pointerId); if (captured === e.pointerId) captured = null;
+  if (ptrs.size < 2) pinch = null;
+  if (ptrs.size === 1) { const [p] = [...ptrs.values()]; drag = {x: p.x, y: p.y, tx: view.tx, ty: view.ty}; } else if (!ptrs.size) drag = null;
+};
+mapEl.addEventListener('pointerup', endPtr); mapEl.addEventListener('pointercancel', endPtr);
+mapEl.addEventListener('click', e => {
+  if (moved) return;
+  const b = e.target.closest('.mk');
+  if (b) { selectVenue(b.dataset.id, false); return; }
+  if (!e.target.closest('.ctls, .layer') && S.selected) selectVenue(null);
+});
+if ('ResizeObserver' in window) new ResizeObserver(() => { if (S.tab === 'map') sizeMap(true); }).observe(mapEl);
+else window.addEventListener('resize', () => sizeMap(true));
+
+function selectVenue(id, center = true) {
+  S.selected = id;
+  Object.values(mk).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === id)));
+  if (id) {
+    if (S.tab !== 'map') setTab('map');
+    const v = byId(id), r = mapEl.getBoundingClientRect(), p = proj(v.lat, v.lng);
+    const sx = view.tx + p.x * view.s, sy = view.ty + p.y * view.s;
+    if (center || sy > r.height - 340 || sy < 110 || sx < 30 || sx > r.width - 30) focusOn(v);
+  }
+  scheduleLayout(); renderSlot(); renderList(false);
+}
+
+function updateMap() {
+  const empty = [];
+  VENUES.forEach(v => {
+    const st = mapStatus(v), b = mk[v.id]; if (!b) return;
+    b.dataset.l = st.key === 'c' ? 'c' : st.level ? String(st.level) : 'x';
+    b.setAttribute('aria-label', `${v.name}, ${st.label}`);
+    b.classList.toggle('here', !!(S.party && S.party.venueId === v.id));
+    const L = st.level || 0, hp = $(`[data-h="${v.id}"]`), hc = $(`[data-c="${v.id}"]`);
+    const hx = hexOf(L, S.layer);
+    if (hp) { hp.setAttribute('r', L ? (70 + L * 40) * PPM : 0); hp.setAttribute('fill', hx); }
+    if (hc) { hc.setAttribute('r', L ? (30 + L * 20) * PPM : 0); hc.setAttribute('fill', hx); }
+    if (!L) empty.push(v);
+  });
+  mapEl.dataset.layer = S.layer; updateLegend();
+  $('#cap').textContent = 'schematic map' + (S.lastUpdate ? ' · updated ' + new Date(S.lastUpdate).toLocaleTimeString('en-GB', {timeZone:'Europe/Madrid', hour:'2-digit', minute:'2-digit'}) : '');
+}
+
+/* ============================================================
+   BOTTOM SLOT: venue card OR empty-state banner
+   ============================================================ */
+let slotKey = '';
+function crowdDots(L) {
+  const circles = [0,1,2,3,4].map(i => i < L ? `<circle cx="${8 + 24 * i}" cy="8" r="7" fill="#000"/>` : `<circle cx="${8 + 24 * i}" cy="8" r="6" fill="none" stroke="#000" stroke-width="2"/>`).join('');
+  return `<svg width="112" height="16" viewBox="0 0 112 16" role="img" aria-label="${L ? 'Crowd level ' + L + ' of 5' : 'Crowd level unknown'}">${circles}</svg>`;
+}
+function renderSlot() {
+  const slot = $('#slot'); if (!slot) return;
+  if (S.dir) {
+    const dkey = 'dir|' + S.selected;
+    if (dkey === slotKey) { updateDirector(); return; }
+    slotKey = dkey; slot.innerHTML = directorHTML(); bindDirector(); updateDirector(); placeToast(); return;
+  }
+  let html = '', key;
+  if (S.selected) {
+    const v = byId(S.selected), st = status(v), c = st.c, mine = !!(S.going.ids[v.id] && S.going.night === madrid().nightKey), here = !!(S.party && S.party.venueId === v.id);
+    key = [v.id, st.label, c.count, c.going, mine, here, S.demo, S.crowd.size].join('|');
+    if (key === slotKey) return;
+    const entry = v.entry == null ? 'entry tbc' : '€ ' + v.entry + ' entry';
+    let crowdTxt = 'crowd';
+    if (st.key === 'c') crowdTxt = `closed · opens around ${fmtH(v.hours[0])} (typical)`;
+    else if (st.level) crowdTxt = `crowd · ${c.count} here`;
+    else crowdTxt = `crowd · needs ${N}+ people before we show it`;
+    const goingTxt = c.going >= N ? `${c.going} going tonight` : 'few going so far';
+    html = `<article class="card" aria-label="${esc(v.name)}">
+      <button type="button" class="x on-purple" id="cardX" aria-label="Close">&times;</button>
+      <div class="row"><span class="badge" style="color:${here ? 'var(--magenta)' : hueOf(st.level)}">${esc(here ? "you're here" : st.label)}</span><span style="font-size:12px">${esc(entry)}</span></div>
+      <div><h3>${esc(v.name)}</h3><div class="sub">${esc(v.barrio)} · ${esc(v.genre)}</div></div>
+      <div class="meta">${crowdDots(st.level || 0)}<span>${esc(crowdTxt)}</span></div>
+      <div class="meta"><span>${esc(goingTxt)}</span></div>
+      <div class="meta"><span>usually peaks ${v.type === 'club' ? '01:30–03:30' : '23:30–01:30'} (estimate)</span></div>
+      <button type="button" class="btn dark on-purple" id="goBtn" aria-pressed="${mine}">${mine ? "you're going" : 'going tonight'}</button>
+      ${S.demo ? '<div class="note">demo data · simulated crowd, not real people</div>' : ''}
+    </article>`;
+  } else {
+    const e = emptyState(); key = 'b|' + (e ? e.k : '');
+    if (key === slotKey) return;
+    if (e) html = `<div class="banner" role="status"><p>${esc(e.text)}</p>${e.btn ? `<button type="button" class="btn sec small" id="bannerBtn">${esc(e.btn)}</button>` : ''}</div>`;
+  }
+  slotKey = key; slot.innerHTML = html; placeToast();
+  const x = $('#cardX'); if (x) x.addEventListener('click', () => selectVenue(null));
+  const g = $('#goBtn'); if (g) g.addEventListener('click', () => toggleGoing(S.selected));
+  const bb = $('#bannerBtn'); if (bb) bb.addEventListener('click', () => { const e = emptyState(); if (e && e.act) e.act(); });
+}
+function emptyState() {
+  if (!S.crowd.size) return null;
+  const now = madrid(), live = VENUES.map(status), goingAny = VENUES.some(v => levelOf((S.crowd.get(v.id) || {going: 0}).going));
+  if (S.layer === 'going') return goingAny ? null : {k:'g0', text: 'nobody has said they are going yet. tap "going tonight" on a venue to be the first.'};
+  if (live.some(x => x.level)) return null;
+  const allClosed = live.every(x => x.key === 'c');
+  if (allClosed && !S.sim) return {k:'closed', text: `it's ${now.label} in madrid and venues are closed. preview a saturday night to see the map in action?`, btn:'preview saturday night', act: () => { S.sim = true; save('sim'); refresh(); toast('previewing saturday night'); }};
+  if (goingAny) return {k:'goinghint', text: (allClosed ? 'venues are closed right now.' : 'no live crowd yet.') + ' see where people plan to go tonight.', btn:'going tonight', act: () => setLayer('going')};
+  if (!S.demo) return {k:'nodemo', text: 'no live crowd data yet. be the first: turn on party mode at a venue.', btn:'turn on demo data', act: () => { S.demo = true; save('demo'); refresh(); }};
+  return {k:'few', text: `not enough people yet. we only show a crowd once ${N}+ people are at a venue.`};
+}
+function setLayer(l) {
+  S.layer = l; document.querySelectorAll('.layer button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.layer === l)));
+  updateMap(); renderSlot();
+}
+document.querySelector('.layer').addEventListener('click', e => { const b = e.target.closest('[data-layer]'); if (b) setLayer(b.dataset.layer); });
+
+/* ---------- demo director (presenter tools) ---------- */
+let playT = null;
+function stopPlay() { if (playT) clearInterval(playT); playT = null; save('simH'); updateDirector(); }
+function togglePlay() {
+  if (playT) return stopPlay();
+  if (!S.sim || S.simH >= 29.4) S.simH = 20;
+  S.sim = true; save('sim');
+  playT = setInterval(() => { S.simH = Math.min(29.5, S.simH + 0.08); if (S.simH >= 29.5) stopPlay(); refresh(); }, 250);
+  refresh();
+}
+let dirShift = 0;
+function shiftMap(dy) { view.ty += dy; clampView(); applyView(true); }
+function openDirector() { if (S.dir) return; S.dir = true; slotKey = ''; if (S.tab !== 'map') setTab('map'); renderSlot(); dirShift = 90; shiftMap(-dirShift); }
+function closeDirector() { S.dir = false; slotKey = ''; stopPlay(); renderSlot(); if (dirShift) { shiftMap(dirShift); dirShift = 0; } }
+function directorHTML() {
+  return `<div class="dir" role="group" aria-label="Demo director">
+    <div class="tm"><b id="dirT"></b><span style="display:flex;gap:8px;align-items:center"><button type="button" class="btn small sec" id="dirPlay" style="min-width:112px;padding:0 14px">play the night</button><button type="button" class="x2" id="dirX" aria-label="Close demo director">&times;</button></span></div>
+    <input id="dirR" type="range" min="20" max="29.5" step="0.25" value="${S.simH}" aria-label="Time of night, saturday">
+    <div class="chips">${[['21:00',21],['23:00',23],['00:30',24.5],['02:00',26],['04:00',28]].map(([l, h]) => `<button type="button" data-h="${h}">${l}</button>`).join('')}</div>
+    <p id="dirS"></p>
+    <div class="two"><button type="button" class="btn small" id="dirAdd" style="flex:1.6">+3 people</button><button type="button" class="btn small sec" id="dirClr">clear</button><button type="button" class="btn small sec" id="dirRecap">recap</button></div>
+  </div>`;
+}
+function bindDirector() {
+  $('#dirX').addEventListener('click', closeDirector);
+  $('#dirPlay').addEventListener('click', togglePlay);
+  $('#dirR').addEventListener('input', e => { if (playT) { clearInterval(playT); playT = null; } S.sim = true; S.simH = +e.target.value; save('sim'); save('simH'); refresh(); });
+  document.querySelectorAll('.dir .chips button').forEach(b => b.addEventListener('click', () => { if (playT) stopPlay(); S.sim = true; S.simH = +b.dataset.h; save('sim'); save('simH'); refresh(); }));
+  $('#dirAdd').addEventListener('click', () => { if (!S.selected) return; (S.fake[S.selected] = S.fake[S.selected] || []).push({ts: Date.now(), n: 3}); save('fake'); refresh(); });
+  $('#dirClr').addEventListener('click', () => { S.fake = {}; save('fake'); refresh(); toast('added people cleared'); });
+  $('#dirRecap').addEventListener('click', recapDialog);
+}
+function updateDirector() {
+  const r = $('#dirR'); if (!r) return;
+  const m = madrid(); $('#dirT').textContent = S.sim ? m.label : 'real time ' + m.label;
+  if (document.activeElement !== r) r.value = String(S.simH);
+  $('#dirPlay').textContent = playT ? 'pause' : 'play the night';
+  const v = S.selected ? byId(S.selected) : null, add = $('#dirAdd'), st = $('#dirS');
+  add.disabled = !v;
+  if (v) { const s2 = status(v), c = s2.c; st.textContent = `${v.name}: ${s2.label} · ` + (!c.open ? 'closed' : c.count >= N ? c.count + ' here' : c.count + ' of ' + N + ' needed to show a crowd') + ' (director view)'; }
+  else st.textContent = 'tap a venue, then add people to see the 5-person rule.';
+}
+
+/* ---------- morning recap ---------- */
+function recapDialog() {
+  dialog({title: 'did the map change where you went last night?',
+    build: b => { b.innerHTML = '<p class="dim">one tap. it helps us learn whether live crowd info is actually useful.</p>'; },
+    actions: [['yes', 'yes, it did'], ['no', "no, i'd have gone anyway"], ['unsure', 'not sure']].map(([k, label]) => ({label, kind: 'pri', onClick: () => { S.recaps.push({ts: Date.now(), a: k}); save('recaps'); toast('thanks · noted'); if (S.tab === 'me') renderMe(); }})).concat([{label: 'skip', kind: 'sec'}])});
+}
+async function toggleGoing(id) {
+  if (requireAuth('saying where you are going tonight needs an account. your name never shows on the map.')) return;
+  const n = madrid();
+  if (S.going.night !== n.nightKey) S.going = {night: n.nightKey, ids: {}};
+  const on = !S.going.ids[id];
+  if (on) S.going.ids[id] = true; else delete S.going.ids[id];
+  try { await Api.setGoing(id, on); }
+  catch (e) { if (on) delete S.going.ids[id]; else S.going.ids[id] = true; toast("couldn't save · try again"); slotKey = ''; renderSlot(); return; }
+  save('going'); await refresh();
+  toast(S.going.ids[id] ? "you're going · counts toward tonight's map" : 'removed');
+}
+
+/* ============================================================
+   VENUES LIST
+   ============================================================ */
+let listKey = '';
+function sortKey(v) { const s = status(v); return s.level ? s.level : s.key === 'x' ? 0 : -1; }
+function renderList(force) {
+  const q = S.query.trim().toLowerCase();
+  const items = VENUES.filter(v => !q || (v.name + ' ' + v.barrio + ' ' + v.genre).toLowerCase().includes(q)).sort((a, b) => sortKey(b) - sortKey(a) || a.name.localeCompare(b.name));
+  const key = q + '|' + S.selected + '|' + items.map(v => v.id + status(v).label).join(',');
+  if (!force && key === listKey) return; listKey = key;
+  const ae = document.activeElement, keepId = ae && ae.dataset && ae.dataset.id && $('#vlist').contains(ae) ? ae.dataset.id : null;
+  $('#vlist').innerHTML = items.map(v => { const st = status(v), sel = S.selected === v.id;
+    return `<li><button type="button" class="li" data-id="${v.id}" style="--lv:${hueOf(st.level)}" ${sel ? 'aria-current="true"' : ''}><span class="ic">${paw(28, 22)}</span><span class="tx"><b>${esc(v.name)}</b><small>${esc(v.barrio)} · <span style="color:${hueOf(st.level)}">${esc(st.label)}</span></small></span>${chev}</button></li>`; }).join('');
+  const em = $('#vempty'); em.hidden = items.length > 0;
+  if (!items.length) em.textContent = `nothing matches "${S.query.trim()}". try a barrio like malasaña or a genre like house.`;
+  if (keepId) { const n = $(`#vlist [data-id="${keepId}"]`); if (n) n.focus(); }
+}
+$('#vlist').addEventListener('click', e => { const b = e.target.closest('.li'); if (b) selectVenue(b.dataset.id, true); });
+$('#q').addEventListener('input', e => { S.query = e.target.value; $('#qclr').hidden = !S.query; renderList(true); });
+$('#qclr').addEventListener('click', () => { S.query = ''; $('#q').value = ''; $('#qclr').hidden = true; renderList(true); $('#q').focus(); });
+
+/* ============================================================
+   ME
+   ============================================================ */
+function sw(id, label, on) { return `<div class="sw"><span>${label}</span><button type="button" class="btn ${on ? '' : 'sec'} small" id="${id}" role="switch" aria-checked="${on}" style="min-width:76px">${on ? 'on' : 'off'}</button></div>`; }
+/* PARS-45: who can see my profile. Saved in profiles.visibility; the "profiles read" policy in schema.sql enforces it. */
+const VIS = [
+  ['public', 'everyone', 'anyone with a party animals account can see your profile.', 'anyone with an account can see your profile'],
+  ['friends', 'friends only', 'only people you have accepted as friends can see your profile.', 'only friends can see your profile'],
+  ['private', 'only me', 'nobody else can see your profile.', 'only you can see your profile']
+];
+function privacyPanel() {
+  if (!sb || !S.user) return '';
+  const p = S.vis;
+  const body = p.state === 'error'
+    ? `<p class="hi">couldn't load your privacy setting.</p><button type="button" class="btn sec" id="visRetry">try again</button>`
+    : p.state === 'loading'
+      ? '<p class="hi">loading your privacy setting</p>'
+      : `<div class="vis" id="visOpts" role="group" aria-label="Who can see your profile">${VIS.map(([k, t, d]) => `<button type="button" id="vis-${k}" data-vis="${k}" aria-pressed="${p.value === k}"${p.saving ? ' aria-disabled="true"' : ''}><b>${t}</b><small>${d}</small></button>`).join('')}</div>`;
+  return `<div class="panel"><h2>Privacy</h2>
+      <p>choose who can see your name and username.</p>
+      ${body}
+      <p>your check-ins and plans are never shown to anyone. they only count anonymously in crowd numbers.</p>
+    </div>`;
+}
+async function loadVisibility(force) {
+  if (!sb || !S.user) return;
+  const uid = S.user.id;
+  if (!force && S.vis.uid === uid) return;
+  const p = S.vis = {uid, state: 'loading', value: null, saving: false};
+  let row = null;
+  try { const {data, error} = await sb.from('profiles').select('visibility').eq('id', uid).maybeSingle(); if (!error) row = data; } catch (e) {}
+  if (S.vis !== p) return;                // logged out or switched account meanwhile
+  p.state = row ? 'ready' : 'error'; p.value = row ? row.visibility : null;
+  if (S.tab === 'me') renderMe();
+}
+async function setVisibility(value) {
+  const p = S.vis;
+  if (p.state !== 'ready' || p.saving || p.value === value) return;
+  if (navigator.onLine === false) return toast("you're offline · try again when you're back");
+  p.saving = true; renderMe();
+  let ok = false;
+  // .select().single() fails if no row changed, so a blocked update can't look like a success
+  try { const {data, error} = await sb.from('profiles').update({visibility: value}).eq('id', p.uid).select('visibility').single(); ok = !error && !!data && data.visibility === value; } catch (e) {}
+  if (S.vis !== p) return;
+  p.saving = false; if (ok) p.value = value;
+  if (S.tab === 'me') renderMe();
+  toast(ok ? VIS.find(o => o[0] === value)[3] : "couldn't save · try again");
+}
+function renderMe() {
+  const v = S.party ? byId(S.party.venueId) : null;
+  const ae = document.activeElement, keepId = ae && ae.id && $('#me').contains(ae) ? ae.id : '';
+  loadVisibility();
+  const acct = !sb ? '' : S.user
+    ? `<div class="panel"><h2>Account</h2><p class="hi">logged in as ${esc(S.user.email || 'you')}</p><button type="button" class="btn sec" id="meOut">log out</button></div>`
+    : `<div class="panel"><h2>Account</h2><p>not logged in. log in to check in and say where you are going.</p><button type="button" class="btn" id="meIn">log in</button><button type="button" class="btn sec" id="meUp">create an account</button></div>`;
+  $('#me').innerHTML = acct + privacyPanel() + `
+    <div class="panel"><h2>Team</h2>
+      <p>the people behind party animals.</p>
+      <button type="button" class="btn" id="meTeam">meet the team</button>
+    </div>
+    <div class="panel"><h2>Party mode</h2>
+      <p class="hi">${v ? `on at ${esc(v.name)} since ${hhmm(S.party.startedAt)}` : 'off. location is only used while party mode is on.'}</p>
+      <button type="button" class="btn ${v ? 'sec' : ''}" id="meParty">${v ? 'stop party mode' : 'party on'}</button>
+    </div>
+    <div class="panel"><h2>Demo data</h2>
+      <p>the map is empty until enough people check in. demo data fills it with simulated crowds, clearly labeled.</p>
+      ${sw('swDemo', 'show demo data', S.demo)}
+      ${sw('swSim', 'simulate a saturday night clock', S.sim)}
+      <button type="button" class="btn sec" id="meDir">open demo director</button>
+    </div>
+    <div class="panel"><h2>Your data</h2>
+      <p>${BACKEND_LOCAL ? 'in this test version everything stays on this device. nothing is sent anywhere.' : 'we store the venue and the time of a check-in, never your coordinates. check-ins are linked to your account only to stop fake counts, and other users can never see them.'} check-ins are deleted after 2 hours.</p>
+      ${store.persistent ? '' : '<p class="hi">your browser is blocking storage, so settings reset when you close this page.</p>'}
+      <button type="button" class="btn sec" id="meDel">delete my data</button>
+    </div>
+    <div class="panel"><h2>Recap</h2>
+      <p>${S.recaps.length ? `${S.recaps.filter(r => r.a === 'yes').length} of ${S.recaps.length} answers said the map changed where they went.` : 'no recap answers yet.'}</p>
+      <button type="button" class="btn sec" id="meRecap">answer a recap</button>
+    </div>
+    <div class="panel"><h2>About</h2>
+      <p>party animals · mvp 0.1 · madrid · 18+ only. venue details are placeholders until verified on site.</p>
+    </div>`;
+  $('#meParty').addEventListener('click', () => { if (S.party) endParty('stopped', true); else onPartyButton(); });
+  $('#swDemo').addEventListener('click', () => { S.demo = !S.demo; save('demo'); renderMe(); refresh(); });
+  $('#meDir').addEventListener('click', openDirector);
+  $('#meTeam').addEventListener('click', () => setTab('team'));
+  $('#meRecap').addEventListener('click', recapDialog);
+  const ss = $('#swSim'); if (ss) ss.addEventListener('click', () => { S.sim = !S.sim; if (!S.sim) stopPlay(); save('sim'); renderMe(); refresh(); });
+  $('#meDel').addEventListener('click', () => dialog({
+    title: 'delete everything?',
+    build: b => { b.innerHTML = sb && S.user
+      ? '<p>this permanently deletes your account, your check-ins and your plans for tonight, then clears this device. it cannot be undone.</p>'
+      : '<p>this clears your check-ins, party mode, 18+ confirmation and settings from this device.</p>'; },
+    actions: [{label: 'delete my data', kind: 'pri', onClick: wipe}, {label: 'cancel', kind: 'sec'}]
+  }));
+  const mi = $('#meIn'), mu = $('#meUp'), mo = $('#meOut');
+  if (mi) mi.addEventListener('click', () => showAuth('login'));
+  if (mu) mu.addEventListener('click', () => showAuth('signup'));
+  if (mo) mo.addEventListener('click', logout);
+  const vo = $('#visOpts'), vr = $('#visRetry');
+  if (vo) vo.addEventListener('click', e => { const b = e.target.closest('[data-vis]'); if (b) setVisibility(b.dataset.vis); });
+  if (vr) vr.addEventListener('click', () => { loadVisibility(true); renderMe(); });
+  if (keepId) { const n = $('#' + keepId); if (n) n.focus(); }
+  updateDemoPill();
+}
+async function wipe() {
+  if (sb && S.user) {
+    const {error} = await sb.rpc('delete_my_account');
+    if (error) { toast("couldn't delete your account · try again"); return; }
+    try { await sb.auth.signOut(); } catch (e) {}
+    S.user = null; S.vis = {uid: null};
+  }
+  stopWatch(); store.clear();
+  S.age = null; S.consent = false; S.party = null; S.going = {night:'', ids:{}}; S.pings = []; S.demo = true; S.sim = false; S.selected = null; S.fake = {}; S.recaps = []; S.simH = 26; S.layer = 'live'; S.dir = false; S.guest = false; slotKey = ''; stopPlay();
+  toast('data deleted'); updateAll(); setTab('map'); showGate();
+}
+async function logout() {
+  if (S.party) endParty('stopped', true);
+  try { await sb.auth.signOut(); } catch (e) {}
+  S.user = null; S.vis = {uid: null}; S.going = {night:'', ids:{}}; save('going'); S.pings = []; save('pings');
+  S.guest = false; save('guest');
+  toast('logged out'); updateAll(); showAuth('login');
+}
+
+/* ============================================================
+   TEAM PAGE (Sprint 0 name buttons)
+   ============================================================ */
+const TEAM = ['Ana Luisa Furiati', 'Maha Karthik', 'Ricardo Chavez', 'Arthur Destombes', 'Lydia Waddell', 'Jan Font'];
+S.teamSel = null;
+function renderTeam() {
+  const sel = S.teamSel, open = sel !== null;
+  $('#tlist').innerHTML = TEAM.map((n, i) => (!open || i === sel) ? `<button type="button" class="tbtn" data-i="${i}">${esc(n)}</button>` : '').join('');
+  $('#tmsg').hidden = !open; if (open) $('#tmsgT').textContent = 'Hola mundoooo - ' + TEAM[sel];
+}
+$('#tlist').addEventListener('click', e => { const b = e.target.closest('.tbtn'); if (!b) return; S.teamSel = +b.dataset.i; renderTeam(); $('#tmsgX').focus(); });
+$('#tmsgX').addEventListener('click', () => { const i = S.teamSel; S.teamSel = null; renderTeam(); const b = $(`#tlist [data-i="${i}"]`); if (b) b.focus(); });
+$('#teamBack').addEventListener('click', () => setTab('me'));
+
+/* ============================================================
+   DEMO PILL
+   ============================================================ */
+function updateDemoPill() {
+  const p = $('#demoPill'); p.hidden = !(S.demo || S.sim);
+  p.textContent = S.sim ? 'demo · ' + madrid().label : 'demo data';
+  p.setAttribute('aria-label', 'Demo mode is on. Open demo director');
+}
+$('#demoPill').addEventListener('click', openDirector);
+
+/* ============================================================
+   PARTY MODE: consent → location → venue snap → confirm → pings
+   ============================================================ */
+let flowToken = 0, watchT = null;
+function updatePartyUi() {
+  const b = $('#partyBtn'), on = !!S.party;
+  b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Party mode on. Open status' : 'Party mode');
+  updateMap(); renderSlot(); if (S.tab === 'me') renderMe();
+}
+function onPartyButton() {
+  if (S.age !== true) { showGate(); return; }
+  if (S.party) return partyStatus();
+  if (requireAuth('party mode needs an account so check-ins stay honest. nobody can see who checked in.')) return;
+  if (!S.consent) return consentDialog();
+  locate();
+}
+function consentDialog() {
+  dialog({
+    title: 'turn on party mode?',
+    build: b => { b.innerHTML = `<ul>
+      <li class="pt">we use your location only while party mode is on and the app is open.</li>
+      <li class="pt">we match you to the nearest venue and keep only the venue and the time. never your coordinates.</li>
+      <li class="pt">check-ins are deleted after 2 hours. you can stop any time.</li>
+      ${BACKEND_LOCAL ? '<li class="pt">in this test version everything stays on your device.</li>' : '<li class="pt">check-ins are tied to your account only to stop fake counts. other users can never see who checked in.</li>'}</ul>`; },
+    actions: [{label: 'turn on', kind: 'pri', onClick: () => { S.consent = true; save('consent'); locate(); }}, {label: 'not now', kind: 'sec'}]
+  });
+}
+async function getPosition() {
+  if (!('geolocation' in navigator)) throw {code: 0};
+  try { if (navigator.permissions && navigator.permissions.query) { const st = await navigator.permissions.query({name: 'geolocation'}); if (st.state === 'denied') throw {code: 1}; } }
+  catch (e) { if (e && e.code === 1) throw e; }
+  return new Promise((res, rej) => { try { navigator.geolocation.getCurrentPosition(res, e => rej({code: e.code}), {enableHighAccuracy: true, timeout: 12000, maximumAge: 15000}); } catch (e) { rej({code: 1}); } });
+}
+function nearby(pos) {
+  const acc = pos.coords.accuracy || 50;
+  return VENUES.map(v => ({v, d: distM(pos.coords.latitude, pos.coords.longitude, v.lat, v.lng)}))
+    .filter(x => x.d <= x.v.r + Math.min(acc, 60)).sort((a, b) => a.d - b.d).slice(0, 3);
+}
+async function locate() {
+  const token = ++flowToken;
+  dialog({title: 'finding you…', dismissible: false,
+    build: b => { b.innerHTML = '<div class="spin" role="img" aria-label="Loading"></div><p>checking which venue you are at. this can take a few seconds.</p>'; },
+    actions: [{label: 'cancel', kind: 'sec', onClick: () => { flowToken++; }}]});
+  let pos;
+  try { pos = await getPosition(); } catch (err) { if (token !== flowToken) return; return geoError(err); }
+  if (token !== flowToken) return;
+  closeDialog(true); handlePosition(pos);
+}
+function geoError(err) {
+  const code = err && err.code, inFrame = window.top !== window.self;
+  const T = {
+    1: ['location is off', 'party mode needs your location to find your venue. allow it for this site in your browser or phone settings, then try again.' + (inFrame ? ' if you opened this inside a preview, location can be blocked there. open the page directly.' : '')],
+    2: ['no location signal', 'we cannot get a fix. step outside or near a window and try again.'],
+    3: ['taking too long', 'your phone has not found you yet. try again, or pick your venue yourself.'],
+    0: ['location not available', 'this device or browser does not support location. you can still pick your venue yourself.']
+  }[code] || ['location problem', 'something went wrong getting your location. try again, or pick your venue yourself.'];
+  dialog({title: T[0], build: b => { b.innerHTML = `<p>${esc(T[1])}</p><p class="dim">picking a venue yourself counts a little less and lasts 1 hour.</p>`; },
+    actions: [{label: 'try again', kind: 'pri', onClick: locate}, {label: 'pick my venue', kind: 'sec', onClick: pickManual}, {label: 'cancel', kind: 'sec'}]});
+}
+function handlePosition(pos) {
+  const acc = pos.coords.accuracy || 0;
+  if (acc > 150) return dialog({title: 'weak location signal', build: b => { b.innerHTML = `<p>your location is only accurate to about ${Math.round(acc)} m, too rough to tell which venue you are at.</p>`; },
+    actions: [{label: 'try again', kind: 'pri', onClick: locate}, {label: 'pick my venue', kind: 'sec', onClick: pickManual}, {label: 'cancel', kind: 'sec'}]});
+  const near = nearby(pos);
+  if (!near.length) {
+    const far = Math.min(...VENUES.map(v => distM(pos.coords.latitude, pos.coords.longitude, v.lat, v.lng))) > 5000;
+    return dialog({title: far ? "you're not near our venues" : "you're not at a listed venue",
+      build: b => { b.innerHTML = `<p>${far ? 'we only cover a few barrios in madrid for now. you can still explore the map.' : 'we could not match you to a venue we know. if you are at one, pick it yourself.'}</p>`; },
+      actions: far ? [{label: 'explore the map', kind: 'pri'}] : [{label: 'pick my venue', kind: 'pri', onClick: pickManual}, {label: 'cancel', kind: 'sec'}]});
+  }
+  if (near.length === 1) {
+    const v = near[0].v;
+    return dialog({title: `you're at ${v.name}?`, build: b => { b.innerHTML = `<p>${esc(v.barrio)} · ${esc(v.genre)}</p>`; },
+      actions: [{label: 'yes, party on', kind: 'pri', onClick: () => beginParty(v.id, 'geo')}, {label: 'not here', kind: 'sec', onClick: pickManual}]});
+  }
+  dialog({title: 'which one are you at?', build: b => {
+      b.innerHTML = '<p class="dim">a few venues are close together.</p><div class="pick"></div>';
+      near.forEach(({v}) => { const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'li'; btn.innerHTML = `<span class="ic">${paw(28, 22)}</span><span class="tx"><b>${esc(v.name)}</b><small>${esc(v.barrio)}</small></span>`; btn.addEventListener('click', () => { closeDialog(); beginParty(v.id, 'geo'); }); $('.pick', b).appendChild(btn); });
+    }, actions: [{label: 'none of these', kind: 'sec'}]});
+}
+function pickManual() {
+  dialog({title: 'pick your venue', build: b => {
+      b.innerHTML = '<p class="dim">only pick where you are right now. manual check-ins count less.</p><div class="pick"></div>';
+      VENUES.forEach(v => { const c = S.crowd.get(v.id), closed = c && !c.open; const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'li'; btn.disabled = !!closed;
+        btn.innerHTML = `<span class="ic">${paw(28, 22)}</span><span class="tx"><b>${esc(v.name)}</b><small>${esc(v.barrio)}${closed ? ' · closed' : ''}</small></span>`;
+        btn.addEventListener('click', () => { closeDialog(); beginParty(v.id, 'manual'); }); $('.pick', b).appendChild(btn); });
+    }, actions: [{label: 'cancel', kind: 'sec'}]});
+}
+function beginParty(id, source) {
+  const v = byId(id), c = S.crowd.get(id);
+  if (c && !c.open) return dialog({title: `${v.name} is closed`, build: b => { b.innerHTML = `<p>typical opening is around ${fmtH(v.hours[0])}. check back then.</p>`; }, actions: [{label: 'ok', kind: 'pri'}]});
+  const t = Date.now();
+  S.party = {venueId: id, startedAt: t, lastPing: t, source, misses: 0, errs: 0, expiresAt: t + (source === 'manual' ? MANUAL_PARTY_MS : MAX_PARTY_MS)};
+  save('party'); recordPing(id, source); startWatch(); updatePartyUi();
+  toast(`party on at ${v.name}`); selectVenue(id, true);
+}
+function partyStatus() {
+  const v = byId(S.party.venueId);
+  dialog({title: `party on at ${v.name}`, build: b => { b.innerHTML = `<p>since ${hhmm(S.party.startedAt)}. ${S.party.source === 'manual' ? 'manual check-in, ends after 1 hour.' : 'we re-check your venue every few minutes while the app is open.'}</p>`; },
+    actions: [{label: 'stop party mode', kind: 'pri', onClick: () => endParty('stopped', true)}, {label: 'keep going', kind: 'sec'}]});
+}
+function endParty(reason, quiet) {
+  const v = S.party && byId(S.party.venueId); S.party = null; save('party'); stopWatch(); updatePartyUi();
+  if (quiet) toast('party mode off');
+  else toast({left: v ? `looks like you left ${v.name} · party mode off` : 'party mode off', signal: 'lost your location signal · party mode off', over: "party's over · party mode off", expired: 'check-in ended · party mode off'}[reason] || 'party mode off');
+}
+
+/* pings + offline queue */
+function recordPing(venueId, source) {
+  const cut = Date.now() - PING_TTL_MIN * 60000;
+  S.pings = S.pings.filter(p => p.ts >= cut); S.pings.push({venueId, ts: Date.now(), source, sent: false});
+  save('pings'); flush(); refresh();
+}
+async function flush() {
+  for (const p of S.pings) { if (p.sent) continue; try { await Api.submitPing(p); p.sent = true; } catch (e) { break; } }
+  save('pings');
+}
+function startWatch() { stopWatch(); watchT = setInterval(tick, 30000); }
+function stopWatch() { if (watchT) clearInterval(watchT); watchT = null; }
+async function tick() {
+  const p = S.party; if (!p) return stopWatch();
+  const now = Date.now(), m = madrid();
+  if (now > p.expiresAt) return endParty(p.source === 'manual' ? 'expired' : 'over');
+  if (!m.sim && m.h >= 7 && m.h < 12) return endParty('over');
+  if (document.hidden || now - p.lastPing < REPING_MS) return;
+  if (p.source === 'manual') return;
+  try {
+    const pos = await getPosition(); if (!S.party) return;
+    if (nearby(pos).some(x => x.v.id === p.venueId)) { p.misses = 0; p.errs = 0; p.lastPing = Date.now(); save('party'); recordPing(p.venueId, 'geo'); }
+    else if (++p.misses >= 2) endParty('left'); else save('party');
+  } catch (e) { if (S.party && ++S.party.errs >= 3) endParty('signal'); else save('party'); }
+}
+
+/* ============================================================
+   GATE (18+)
+   ============================================================ */
+function showGate() {
+  const g = $('#gate');
+  if (S.age === true) { if (authOpen) return; if (needsAuth()) { showAuth(); return; } g.innerHTML = ''; $('#app').inert = false; return; }
+  authOpen = false; $('#app').inert = true;
+  if (S.age === false) {
+    g.innerHTML = `<div class="gate" role="dialog" aria-modal="true" aria-labelledby="gt"><div class="in">${paw(80, 64)}<h1 id="gt">party animals is 18+</h1><p>come back when you are 18 or older.</p></div></div>`;
+    return;
+  }
+  g.innerHTML = `<div class="gate" role="dialog" aria-modal="true" aria-labelledby="gt"><div class="in">${paw(80, 64)}<h1 id="gt">see where the night is happening</h1>
+    <p>a live crowd map of madrid's clubs and bars. party animals is for people 18 and over.</p>
+    <div class="btns"><button type="button" class="btn" id="ageYes">i'm 18 or older</button><button type="button" class="btn sec" id="ageNo">i'm under 18</button></div></div></div>`;
+  $('#ageYes').addEventListener('click', () => { S.age = true; save('age'); showGate(); if (!store.persistent) toast('your browser blocks storage, so settings will not be saved'); setTab(S.tab); });
+  $('#ageNo').addEventListener('click', () => { S.age = false; save('age'); showGate(); });
+  $('#ageYes').focus();
+}
+
+/* ============================================================
+   AUTH (Supabase): log in, sign up, reset password, set new password.
+   Browsing the map works without an account; check-ins and
+   "going tonight" need one so counts can't be faked.
+   ============================================================ */
+let authMode = 'login', authOpen = false;
+const needsAuth = () => !!sb && !S.user && !S.guest;
+const redirectUrl = () => /^https?:$/.test(location.protocol) ? location.origin + location.pathname : undefined;
+function requireAuth(why) {
+  if (!sb || S.user) return false;
+  dialog({title: 'log in first', build: b => { b.innerHTML = `<p>${esc(why)}</p>`; },
+    actions: [{label: 'log in', kind: 'pri', onClick: () => showAuth('login')}, {label: 'create an account', kind: 'sec', onClick: () => showAuth('signup')}, {label: 'not now', kind: 'sec'}]});
+  return true;
+}
+const authField = (id, label, type, ph, ac, max) => `<div class="field"><label for="${id}">${label}</label><div class="box"><input id="${id}" name="${id}" type="${type}" placeholder="${ph}" autocomplete="${ac}" maxlength="${max}"${type === 'email' ? ' inputmode="email" autocapitalize="off" spellcheck="false"' : ''}></div></div>`;
+const AUTH_COPY = {
+  login:   {t: 'welcome back', p: 'log in to check in and say where you are going tonight.', go: 'log in'},
+  signup:  {t: 'create your account', p: 'your name is never shown on the map. crowds only appear once 5+ people are at a venue.', go: 'create account'},
+  reset:   {t: 'reset your password', p: "enter your email and we'll send you a link to choose a new password.", go: 'send reset link'},
+  newpass: {t: 'choose a new password', p: 'pick something with 8 or more characters.', go: 'save password'}
+};
+function authMsg(e) {
+  const m = String((e && e.message) || ''), st = e && e.status;
+  if (/invalid login credentials/i.test(m)) return 'wrong email or password.';
+  if (/email not confirmed/i.test(m)) return 'confirm your email first. check your inbox (and spam).';
+  if (/already registered|already exists/i.test(m)) return 'this email already has an account. log in instead.';
+  if (/password/i.test(m) && /(weak|short|least|characters)/i.test(m)) return 'that password is too weak. use 8+ characters.';
+  if (st === 429 || /rate limit|too many/i.test(m)) return 'too many tries. wait a minute and try again.';
+  if (/fetch|network/i.test(m) || navigator.onLine === false) return 'no connection. try again.';
+  return 'something went wrong. try again.';
+}
+function showAuth(mode) {
+  if (!sb) return;
+  closeDialog(true);
+  if (mode) authMode = mode;
+  authOpen = true;
+  const g = $('#gate'), c = AUTH_COPY[authMode], m = authMode;
+  $('#app').inert = true;
+  const fields = (m === 'signup' ? authField('aName', 'name (optional)', 'text', 'what friends call you', 'nickname', 40) : '')
+    + (m !== 'newpass' ? authField('aEmail', 'email', 'email', 'you@email.com', 'email', 120) : '')
+    + (m !== 'reset' ? authField('aPass', 'password', 'password', m === 'login' ? 'your password' : '8+ characters', m === 'login' ? 'current-password' : 'new-password', 72) : '');
+  const swap = m === 'login' ? ['signup', 'create an account'] : m === 'signup' ? ['login', 'i already have an account'] : m === 'reset' ? ['login', 'back to log in'] : null;
+  g.innerHTML = `<div class="gate" role="dialog" aria-modal="true" aria-labelledby="gt"><form class="in" id="authForm" novalidate>${paw(56, 45)}
+    <div class="ah"><h1 id="gt">${esc(c.t)}</h1><p>${esc(c.p)}</p></div>
+    <div class="authf">${fields}</div>
+    <p class="err" id="aErr" role="alert" hidden></p>
+    <div class="btns"><button type="submit" class="btn" id="aGo">${esc(c.go)}</button>${swap ? `<button type="button" class="btn sec" data-mode="${swap[0]}">${esc(swap[1])}</button>` : ''}</div>
+    ${m === 'newpass' ? '' : `<div class="links">${m === 'login' ? '<button type="button" class="lnk" data-mode="reset">forgot password?</button>' : ''}<button type="button" class="lnk" id="aGuest">just look around</button></div>`}
+  </form></div>`;
+  const form = $('#authForm');
+  form.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => showAuth(b.dataset.mode)));
+  const gb = $('#aGuest'); if (gb) gb.addEventListener('click', () => { S.guest = true; save('guest'); closeAuth(); });
+  form.addEventListener('submit', submitAuth);
+  const first = form.querySelector('input'); if (first) first.focus();
+}
+function closeAuth() {
+  authOpen = false; $('#gate').innerHTML = ''; $('#app').inert = false;
+  setTab(S.tab);
+}
+async function submitAuth(e) {
+  e.preventDefault();
+  const m = authMode, val = id => { const el = $('#' + id); return el ? el.value : ''; };
+  const email = val('aEmail').trim(), pass = val('aPass'), name = val('aName').trim();
+  const errEl = $('#aErr'), err = t => { errEl.textContent = t; errEl.hidden = !t; };
+  if (m !== 'newpass' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return err('enter a valid email.');
+  if (m === 'login' && !pass) return err('enter your password.');
+  if ((m === 'signup' || m === 'newpass') && pass.length < 8) return err('your password needs 8 or more characters.');
+  const go = $('#aGo'); go.disabled = true; err('');
+  try {
+    if (m === 'login') {
+      const {error} = await sb.auth.signInWithPassword({email, password: pass}); if (error) throw error;
+      closeAuth(); toast('logged in');
+    } else if (m === 'signup') {
+      const {data, error} = await sb.auth.signUp({email, password: pass, options: {data: {display_name: name, is_adult: S.age === true}, emailRedirectTo: redirectUrl()}});
+      if (error) throw error;
+      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) throw new Error('already registered');
+      if (data.session) { closeAuth(); toast('welcome to party animals'); }
+      else showCheckEmail(email);
+    } else if (m === 'reset') {
+      const {error} = await sb.auth.resetPasswordForEmail(email, {redirectTo: redirectUrl()}); if (error) throw error;
+      showAuth('login'); toast('if that email has an account, a reset link is on its way');
+    } else if (m === 'newpass') {
+      const {error} = await sb.auth.updateUser({password: pass}); if (error) throw error;
+      authMode = 'login'; closeAuth(); toast('password updated');
+    }
+  } catch (x) { err(authMsg(x)); go.disabled = false; }
+}
+function showCheckEmail(email) {
+  authOpen = true;
+  $('#gate').innerHTML = `<div class="gate" role="dialog" aria-modal="true" aria-labelledby="gt"><div class="in">${paw(56, 45)}
+    <div class="ah"><h1 id="gt">check your email</h1><p>we sent a confirmation link to <span style="color:var(--magenta)">${esc(email)}</span>. open it on this device to finish creating your account.</p></div>
+    <div class="btns"><button type="button" class="btn" id="aDone">i confirmed, log in</button><button type="button" class="btn sec" id="aResend">send the email again</button></div></div></div>`;
+  $('#aDone').addEventListener('click', () => showAuth('login'));
+  $('#aResend').addEventListener('click', async e => {
+    e.currentTarget.disabled = true;
+    const {error} = await sb.auth.resend({type: 'signup', email, options: {emailRedirectTo: redirectUrl()}});
+    toast(error ? authMsg(error) : 'sent again · check your spam folder too');
+  });
+  $('#aDone').focus();
+}
+async function initAuth() {
+  if (!sb) return;
+  sb.auth.onAuthStateChange((event, session) => {
+    S.user = session ? session.user : null;
+    // keep this callback synchronous: supabase-js warns against awaiting its own calls in here
+    setTimeout(() => {
+      if (event === 'PASSWORD_RECOVERY') { showAuth('newpass'); return; }
+      if (event === 'SIGNED_IN' && authOpen && authMode !== 'newpass' && S.user) closeAuth();
+      if (event === 'SIGNED_OUT' && S.party) endParty('stopped', true);
+      if (S.tab === 'me') renderMe();
+      if (event === 'SIGNED_IN') flush();
+    }, 0);
+  });
+  try { const {data} = await sb.auth.getSession(); S.user = data && data.session ? data.session.user : null; } catch (e) { S.user = null; }
+}
+
+/* ============================================================
+   REFRESH LOOP
+   ============================================================ */
+function updateAll() { updateDemoPill(); updateMap(); renderSlot(); renderList(false); if (S.tab === 'me') renderMe(); updatePartyUi(); }
+async function refresh() {
+  try {
+    const n = madrid();
+    if (S.going.night && S.going.night !== n.nightKey) { S.going = {night: n.nightKey, ids: {}}; save('going'); }
+    S.crowd = await Api.getCrowd(); S.lastUpdate = Date.now(); S.refreshFailed = false;
+  } catch (e) { if (!S.refreshFailed) toast("couldn't refresh · showing last data"); S.refreshFailed = true; }
+  updateAll();
+}
+function setOnline(on) {
+  S.online = on; $('#offline').hidden = on;
+  if (on) { flush(); refresh(); } else toast('offline · check-ins will send when you are back');
+}
+window.addEventListener('online', () => setOnline(true));
+window.addEventListener('offline', () => setOnline(false));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { refresh(); if (S.party) tick(); } });
+setInterval(() => { if (!document.hidden) refresh(); }, 30000);
+window.addEventListener('error', () => toast('something went wrong · try again'));
+window.addEventListener('unhandledrejection', () => toast('something went wrong · try again'));
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+try {
+  buildMap(); setTab('map'); sizeMap(false);
+  if (S.party) { if (Date.now() > S.party.expiresAt) { S.party = null; save('party'); } else startWatch(); }
+  S.pings = S.pings.filter(p => p.ts >= Date.now() - PING_TTL_MIN * 60000); save('pings');
+  $('#offline').hidden = S.online;
+  if (sb) $('#app').inert = true; // wait for the saved session before deciding whether to show the login screen
+  initAuth().then(() => { showGate(); refresh(); flush(); });
+} catch (e) {
+  document.body.insertAdjacentHTML('beforeend', '<div style="position:fixed;inset:0;background:#000;color:#DF40C6;padding:24px;z-index:999;font-weight:800">something broke while starting. <button style="margin-top:16px;display:block;height:52px;padding:0 28px;border-radius:999px;border:2px solid #DF40C6;background:#DF40C6;color:#000;font-weight:800" onclick="location.reload()">reload</button></div>');
+}
+})();
+</script>
+</body>
+</html>
