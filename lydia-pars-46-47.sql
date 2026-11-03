@@ -1,19 +1,21 @@
 -- =====================================================================
--- Party Animals · PARS-46 (profile + onboarding) and PARS-47 (friends + live questions)
+-- Party Animals · PARS-46 (profile + onboarding) and PARS-47 (friends with layered identity)
 -- Author: Lydia Waddell
 --
--- ADDS NEW OBJECTS ONLY. It does not change any existing table, policy or function
--- from schema.sql. It only *uses* existing ones: profiles, venues, visits, friendships,
--- are_friends(), current_night(), touch_updated_at().
+-- ADDS NEW OBJECTS ONLY. It does not change any existing table, policy or function.
+-- It only *uses* existing ones: profiles, visits, friendships, are_friends(), touch_updated_at().
+--
+-- NOT included on purpose: live questions (venue_reports, get_venue_reports, is_checked_in).
+-- A teammate already built those in the live database, so this file does not touch them.
 --
 -- Every function here uses plain "create function" (not "create or replace"), so if an
 -- object with the same name already exists, the script STOPS with an error instead of
--- overwriting someone else's work. The main part runs as one transaction: all or nothing.
+-- overwriting someone else's work. It runs as one transaction: all or nothing.
 --
--- BEFORE RUNNING, check nothing with these names exists yet (all 3 columns should be empty/false):
---   select to_regclass('public.profile_extras') as t1, to_regclass('public.favorites') as t2, to_regclass('public.venue_reports') as t3;
+-- BEFORE RUNNING, check nothing with these names exists yet (expect: null, null and 0 rows):
+--   select to_regclass('public.profile_extras') as t1, to_regclass('public.favorites') as t2;
 --   select proname from pg_proc where pronamespace = 'public'::regnamespace
---     and proname in ('get_venue_reports', 'find_user', 'get_friends', 'venue_reports_stamp', 'profile_extras_history_off');
+--     and proname in ('find_user', 'get_friends', 'profile_extras_history_off');
 --
 -- Run: Supabase > SQL Editor > New query > paste this whole file > Run.
 -- =====================================================================
@@ -56,44 +58,11 @@ create table public.favorites (
   primary key (user_id, slot)
 );
 
--- ---------- venue_reports (PARS-47): live answers about a venue ----------
--- price = entry in euros (0-200), crowd = 1 quiet .. 5 packed, grade = 1 .. 5 stars.
--- One answer per person, venue, question and night. Insert-only: nobody can read raw rows.
-create table public.venue_reports (
-  id         bigint generated always as identity primary key,
-  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  venue_id   text not null references public.venues(id) on delete cascade,
-  kind       text not null check (kind in ('price', 'crowd', 'grade')),
-  value      numeric(6, 2) not null,
-  night      date not null default public.current_night(),
-  created_at timestamptz not null default now(),
-  check (
-    (kind = 'price' and value between 0 and 200)
-    or (kind in ('crowd', 'grade') and value in (1, 2, 3, 4, 5))
-  ),
-  unique (user_id, venue_id, kind, night)
-);
-create index venue_reports_night on public.venue_reports (night, venue_id);
-
--- the server decides the time and the night, so nobody can backdate answers
-create function public.venue_reports_stamp()
-returns trigger language plpgsql set search_path = '' as $$
-begin
-  new.created_at = now();
-  new.night = public.current_night();
-  return new;
-end $$;
-revoke all on function public.venue_reports_stamp() from public, anon, authenticated;
-
-create trigger venue_reports_stamp before insert on public.venue_reports
-  for each row execute function public.venue_reports_stamp();
-
 -- =====================================================================
 -- Row Level Security
 -- =====================================================================
 alter table public.profile_extras enable row level security;
 alter table public.favorites      enable row level security;
-alter table public.venue_reports  enable row level security;
 
 -- profile_extras: yours only
 create policy "profile_extras read own"   on public.profile_extras for select to authenticated using (user_id = auth.uid());
@@ -114,39 +83,9 @@ create policy "favorites update own" on public.favorites for update to authentic
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "favorites delete own" on public.favorites for delete to authenticated using (user_id = auth.uid());
 
--- venue_reports: insert your own, never read back (no select policy on purpose, like pings)
-create policy "venue_reports insert own" on public.venue_reports for insert to authenticated
-  with check (user_id = auth.uid());
-
 -- =====================================================================
--- Functions (the only way to read across users)
+-- Functions (PARS-47 friends: the only way to see other people)
 -- =====================================================================
-
--- Tonight's averages per venue. A question only gets a number when 5+ different
--- people answered it tonight; below that it returns null and 0 people.
-create function public.get_venue_reports()
-returns table (venue_id text, price_eur numeric, crowd numeric, grade numeric,
-               price_people integer, crowd_people integer, grade_people integer)
-language sql stable security definer set search_path = '' as $$
-  with agg as (
-    select r.venue_id, r.kind, avg(r.value) as a, count(distinct r.user_id) as people
-    from public.venue_reports r
-    where r.night = public.current_night()
-    group by r.venue_id, r.kind
-  )
-  select v.id,
-         round(max(g.a) filter (where g.kind = 'price' and g.people >= 5), 0),
-         round(max(g.a) filter (where g.kind = 'crowd' and g.people >= 5), 1),
-         round(max(g.a) filter (where g.kind = 'grade' and g.people >= 5), 1),
-         coalesce(max(g.people) filter (where g.kind = 'price' and g.people >= 5), 0)::integer,
-         coalesce(max(g.people) filter (where g.kind = 'crowd' and g.people >= 5), 0)::integer,
-         coalesce(max(g.people) filter (where g.kind = 'grade' and g.people >= 5), 0)::integer
-  from public.venues v
-  left join agg g on g.venue_id = v.id
-  group by v.id
-$$;
-revoke all on function public.get_venue_reports() from public;
-grant execute on function public.get_venue_reports() to anon, authenticated;
 
 -- Find someone by their EXACT username (a leading @ is ignored).
 -- Returns only id + username: never the name, favorites or anything else.
@@ -207,11 +146,3 @@ revoke all on function public.get_friends() from public, anon;
 grant execute on function public.get_friends() to authenticated;
 
 commit;
-
--- =====================================================================
--- Automatic clean-up (pg_cron, already enabled by schema.sql).
--- Live answers are only about tonight, so they are deleted every morning.
--- New job name, so it does not touch the existing jobs.
--- =====================================================================
-select cron.schedule('pa-delete-old-venue-reports', '20 7 * * *',
-  $$delete from public.venue_reports where night < public.current_night()$$);

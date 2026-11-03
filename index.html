@@ -245,8 +245,6 @@ h1,h2,h3,p{margin:0}
 .chip{display:inline-flex;align-items:center;min-height:28px;padding:4px 12px;border-radius:999px;border:1px solid var(--purple);color:var(--magenta);font-size:11px;font-weight:800;overflow-wrap:anywhere}
 .chip i{font-style:normal;color:var(--purple);font-weight:400;margin-right:6px}
 .panel .err,.dlg .err{font-size:12px;line-height:1.5;color:var(--yellow);font-weight:800}
-.dlg .q{display:flex;flex-direction:column;gap:8px}
-.dlg .q p{font-size:12px}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
@@ -1375,13 +1373,13 @@ async function initAuth() {
 
 /* ============================================================
    PROFILE (PARS-46): favorites picker, first-login onboarding, venue history (opt-in)
-   FRIENDS (PARS-47): add friends with layered identity, live questions
+   FRIENDS (PARS-47): add friends with layered identity
+   (live questions are a teammate's work: not in this block)
    Database side: lydia-pars-46-47.sql. Everything here goes through RLS or
-   the functions find_user / get_friends / get_venue_reports.
+   the functions find_user / get_friends.
    ============================================================ */
 const FAV_SLOTS = [1, 2, 3];
-const CROWD_WORDS = [null, 'quiet', 'warming up', 'filling up', 'busy now', 'packed'];
-const P = {uid: null, loaded: false, loading: null, extras: null, favs: [], visits: [], me: null, friends: [], reports: [], found: undefined, prompted: false};
+const P = {uid: null, loaded: false, loading: null, extras: null, favs: [], visits: [], me: null, friends: [], found: undefined, prompted: false};
 const errBox = (id, t) => { const el = $('#' + id); if (el) { el.textContent = t || ''; el.hidden = !t; } };
 const fmtNight = d => { try { return new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC'}).toLowerCase(); } catch (e) { return d; } };
 const venueName = id => (byId(id) || {name: id}).name;
@@ -1534,41 +1532,16 @@ async function maybeOnboard() {
 
 /* ---------- Friends tab ---------- */
 async function loadFriends() {
-  const [fr, rp] = await Promise.all([sb.rpc('get_friends'), sb.rpc('get_venue_reports')]);
-  if (fr.error) throw fr.error; if (rp.error) throw rp.error;
-  P.friends = fr.data || []; P.reports = rp.data || [];
+  const {data, error} = await sb.rpc('get_friends'); if (error) throw error;
+  P.friends = data || [];
 }
-async function loadReports() {
-  const {data, error} = await sb.rpc('get_venue_reports'); if (error) throw error;
-  P.reports = data || [];
-}
-function liveHTML() {
-  const rows = P.reports.filter(r => r.price_eur != null || r.crowd != null || r.grade != null)
-    .map(r => { const bits = [];
-      if (r.price_eur != null) bits.push(`entry ~€${Math.round(r.price_eur)}`);
-      if (r.crowd != null) bits.push(CROWD_WORDS[clamp(Math.round(r.crowd), 1, 5)]);
-      if (r.grade != null) bits.push(`${Number(r.grade).toFixed(1)}/5`);
-      return {name: venueName(r.venue_id), txt: bits.join(' · '), n: Math.max(r.price_people, r.crowd_people, r.grade_people)}; })
-    .sort((a, b) => b.n - a.n);
-  return `<div class="panel"><h2>Live questions</h2>
-    <p>at a venue right now? say what entry cost, how crowded it is and grade it. a result only shows once 5+ different people answered tonight, so nobody can be singled out.</p>
-    <button type="button" class="btn" id="liveAsk">answer for a venue</button>
-    <ul class="plist" aria-label="Tonight's answers">${rows.length
-      ? rows.map(r => `<li class="prow"><span class="tx"><b>${esc(r.name)}</b><small>${esc(r.txt)} · ${r.n} people</small></span></li>`).join('')
-      : '<li><p>no venue has 5+ answers yet tonight.</p></li>'}</ul>
-  </div>`;
-}
-function bindLive() { const b = $('#liveAsk'); if (b) b.addEventListener('click', liveDialog); }
-
 async function renderFriends() {
   const box = $('#friends'); if (!box) return;
   pSync();
   if (!sb) { box.innerHTML = '<div class="card"><div class="row"><span class="badge">online only</span></div><h3>friends need an account</h3><p class="sub">this copy runs as a local demo, so there is nobody to add.</p></div>'; return; }
   if (!S.user) {
-    try { await loadReports(); } catch (e) { P.reports = []; }
-    if (S.user) return renderFriends();
-    box.innerHTML = '<div class="panel"><h2>Your crew</h2><p>log in to add friends by username. they only see your name and favorites after you accept each other.</p><button type="button" class="btn" id="frIn">log in</button><button type="button" class="btn sec" id="frUp">create an account</button></div>' + liveHTML();
-    $('#frIn').addEventListener('click', () => showAuth('login')); $('#frUp').addEventListener('click', () => showAuth('signup')); bindLive(); return;
+    box.innerHTML = '<div class="panel"><h2>Your crew</h2><p>log in to add friends by username. they only see your name and favorites after you accept each other.</p><button type="button" class="btn" id="frIn">log in</button><button type="button" class="btn sec" id="frUp">create an account</button></div>';
+    $('#frIn').addEventListener('click', () => showAuth('login')); $('#frUp').addEventListener('click', () => showAuth('signup')); return;
   }
   if (!box.innerHTML.trim() || !P.loaded) box.innerHTML = '<div class="panel"><h2>Your crew</h2><div class="spin" role="img" aria-label="Loading"></div></div>';
   try { await ensureProfile(); await loadFriends(); }
@@ -1616,7 +1589,7 @@ function drawFriends() {
           return `<li class="prow"><span class="tx"><b>${esc(f.display_name || handle(f))}</b><small>${esc(handle(f))}${priv ? ' · private profile' : ''}</small>${f.favorites && f.favorites.length ? `<span class="chips">${f.favorites.map(x => `<span class="chip"><i>${esc(x.kind)}</i>${esc(x.label)}</span>`).join('')}</span>` : ''}</span><span class="acts"><button type="button" class="btn small sec" data-rm="${f.friend_id}" aria-label="Remove ${esc(handle(f))}">remove</button></span></li>`; }).join('')}
         ${sent.map(f => `<li class="prow"><span class="tx"><b>${esc(handle(f))}</b><small>request sent</small></span><span class="acts"><button type="button" class="btn small sec" data-rm="${f.friend_id}" aria-label="Cancel request to ${esc(handle(f))}">cancel</button></span></li>`).join('')}
       </ul>` : '<p>no friends yet. add someone by their username.</p>'}
-    </div>` + addHTML + liveHTML() + (uname ? usernameHTML : '');
+    </div>` + addHTML + (uname ? usernameHTML : '');
   $('#unForm').addEventListener('submit', saveUsername);
   const ff = $('#findForm'); if (ff) ff.addEventListener('submit', findFriend);
   const fs = $('#frSend'); if (fs) fs.addEventListener('click', () => sendRequest(found));
@@ -1628,7 +1601,6 @@ function drawFriends() {
     dialog({title: `remove ${handle(f)}?`, build: d => { d.innerHTML = '<p>you stop seeing each other\'s name and favorites. you can add them again later.</p>'; },
       actions: [{label: 'remove', kind: 'pri', onClick: () => removeFriend(f.friend_id)}, {label: 'cancel', kind: 'sec'}]});
   }));
-  bindLive();
 }
 async function saveUsername(e) {
   e.preventDefault();
@@ -1666,51 +1638,6 @@ async function removeFriend(id) {
   const b = await sb.from('friendships').delete().eq('requester', id).eq('addressee', me);
   if (a.error || b.error) { toast("couldn't remove · try again"); return; }
   toast('removed'); P.found = undefined; renderFriends();
-}
-
-/* ---------- live questions: entry price, crowd level, grade ---------- */
-function liveDialog() {
-  if (requireAuth('answering needs an account so answers stay honest. nobody can see who answered.')) return;
-  dialog({title: 'which venue are you at?', build: b => {
-      b.innerHTML = '<p class="dim">only answer for where you are right now.</p><div class="pick"></div>';
-      VENUES.forEach(v => { const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'li';
-        btn.innerHTML = `<span class="ic">${paw(28, 22)}</span><span class="tx"><b>${esc(v.name)}</b><small>${esc(v.barrio)}</small></span>`;
-        btn.addEventListener('click', () => { closeDialog(true); questionsDialog(v); }); $('.pick', b).appendChild(btn); });
-    }, actions: [{label: 'cancel', kind: 'sec'}]});
-}
-function questionsDialog(v) {
-  const st = {crowd: null, grade: null};
-  const seg = (q, labels) => labels.map((l, i) => `<button type="button" class="btn small sec" data-q="${q}" data-v="${i + 1}" aria-pressed="false">${esc(l)}</button>`).join('');
-  dialog({title: `${v.name} right now`, build: b => {
-      b.innerHTML = `<p class="dim">answer any of the 3. one answer per question per night.</p>
-        <div class="field" style="margin:0"><label for="qPrice">what did entry cost? (€)</label><div class="box"><input id="qPrice" type="number" inputmode="decimal" min="0" max="200" step="0.5" placeholder="0 if free"></div></div>
-        <div class="q"><p id="qCrowdL">how crowded is it?</p><div class="seg" role="group" aria-labelledby="qCrowdL">${seg('crowd', CROWD_WORDS.slice(1))}</div></div>
-        <div class="q"><p id="qGradeL">grade it (1 = bad, 5 = great)</p><div class="seg" role="group" aria-labelledby="qGradeL">${seg('grade', ['1', '2', '3', '4', '5'])}</div></div>
-        <p class="err" id="qErr" role="alert" hidden></p>`;
-      b.addEventListener('click', e => {
-        const t = e.target.closest('[data-q]'); if (!t) return;
-        st[t.dataset.q] = +t.dataset.v;
-        b.querySelectorAll(`[data-q="${t.dataset.q}"]`).forEach(x => { const on = x === t; x.setAttribute('aria-pressed', String(on)); x.classList.toggle('sec', !on); });
-      });
-    }, actions: [{label: 'send answers', kind: 'pri', close: false, onClick: () => submitAnswers(v, st)}, {label: 'cancel', kind: 'sec'}]});
-  const pi = $('#qPrice'); if (pi) pi.focus();
-}
-async function submitAnswers(v, st) {
-  const raw = $('#qPrice').value.trim(), rows = [];
-  if (raw !== '') { const n = Number(raw); if (!Number.isFinite(n) || n < 0 || n > 200) return errBox('qErr', 'entry has to be between 0 and 200 €.'); rows.push({kind: 'price', value: Math.round(n * 100) / 100}); }
-  if (st.crowd) rows.push({kind: 'crowd', value: st.crowd});
-  if (st.grade) rows.push({kind: 'grade', value: st.grade});
-  if (!rows.length) return errBox('qErr', 'answer at least one question.');
-  let saved = 0, dup = 0, fail = 0;
-  for (const r of rows) {
-    const {error} = await sb.from('venue_reports').insert({user_id: S.user.id, venue_id: v.id, kind: r.kind, value: r.value});
-    if (!error) saved++; else if (error.code === '23505') dup++; else fail++;
-  }
-  if (fail && !saved) return errBox('qErr', "couldn't send · try again");
-  closeDialog();
-  toast(saved ? `thanks · ${saved} answer${saved > 1 ? 's' : ''} saved${dup ? ' (some you already answered tonight)' : ''}` : 'you already answered these tonight');
-  try { await loadReports(); } catch (e) {}
-  if (S.tab === 'friends') drawFriends();
 }
 
 /* re-render when someone logs in or out (a second listener, so initAuth stays as it was) */
