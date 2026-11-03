@@ -2,12 +2,12 @@
 
 ## Current setup (live since 2 Nov 2026)
 
-- **App**: https://lively-squirrel-e20822.netlify.app (hosted on Netlify, single `index.html`)
+- **App**: https://party-animals-gray.vercel.app (hosted on Vercel, single `index.html`)
 - **Database**: Supabase project "Party Animals" (org "Party Animals", region eu-central-1 / Frankfurt). `schema.sql` is already applied.
 - **Keys**: project URL and publishable key are already in `index.html`. Never put the secret key in the app.
-- **Auth**: email + password, email confirmation ON. Site URL and redirect URL point to the Netlify site.
+- **Auth**: email + password, email confirmation ON. Site URL and redirect URL point to the Vercel site.
 - **Team access**: accept the Supabase invitation from your email to get into the project.
-- **Updating the app**: edit `index.html`, then drop it again on the Netlify site's Deploys page.
+- **Updating the app**: create a branch, edit `index.html` and open a pull request. Once it is merged into `main`, Vercel redeploys the site automatically. Each pull request also gets its own Vercel preview link to test before merging.
 
 Files:
 - `index.html`: the app. With empty keys it runs as a local demo; with keys it uses the database.
