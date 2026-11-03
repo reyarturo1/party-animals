@@ -226,6 +226,53 @@ h1,h2,h3,p{margin:0}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
+
+.nav .lbl{display:none}
+
+/* ===== DESKTOP (PARS-5) · from 1024px: sidebar + wide map + side panel.
+   The mobile layout above is untouched: everything here lives inside this media query. ===== */
+@media (min-width:1024px){
+  :root{--side-w:232px;--panel-w:380px;--hdr-h:64px}
+  #app{max-width:1680px}
+  .hdr{height:var(--hdr-h);padding:0 28px;background:#000;border-bottom:1px solid var(--line)}
+  .brand b{font-size:18px}
+  .screen{top:var(--hdr-h);left:var(--side-w)}
+  .screen:not(#screen-map){padding:32px max(32px,calc((100% - 980px)/2)) 56px}
+  .screen h1{font-size:14px;margin-bottom:20px}
+
+  /* navigation becomes a left sidebar */
+  .nav{left:0;top:var(--hdr-h);bottom:0;transform:none;width:var(--side-w);height:auto;padding:24px 16px;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:8px;border:0;border-right:1px solid var(--line);border-radius:0}
+  .nav button{flex:none;max-width:none;width:100%;height:56px;flex-direction:row;justify-content:flex-start;gap:14px;padding:0 20px;border-radius:28px}
+  .nav button span{font-size:14px}
+  .nav .party{width:100%;max-width:none;border-radius:28px}
+  .nav .lbl{display:inline;font-weight:800;color:var(--magenta)}
+  .nav button:hover{color:var(--magenta)}
+  .nav button[aria-current="page"]:hover{color:#000}
+
+  /* map: controls move to the corners, the venue card becomes a right-hand panel */
+  #screen-map .layer{top:16px}
+  #screen-map .ctls{top:auto;right:auto;left:16px;bottom:16px}
+  .legend{top:68px}
+  .cap{top:92px}
+  .offline{top:116px;left:16px}
+  .slot{left:auto;right:16px;top:20px;bottom:auto;width:var(--panel-w);pointer-events:none}
+  .slot>*{pointer-events:auto}
+  .mk:hover{z-index:6}
+  .mk:hover:not(.vl) .nm{display:block;top:calc(100% - 6px);left:50%;transform:translateX(-50%)}
+
+  /* toasts, dialogs and the team message follow the new frame */
+  .toast{left:calc(50% + var(--side-w)/2)}
+  .tmsg{left:calc(var(--side-w) + 32px);right:auto;bottom:32px;width:min(560px,calc(100% - var(--side-w) - 64px))}
+  .scrim{align-items:center}
+
+  /* other screens: use the width */
+  #screen-venues .field{max-width:520px}
+  #vlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .li:hover:not([aria-current="true"]){border-color:var(--magenta)}
+  #me{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+  #me .panel{margin-bottom:0}
+  .tlist{padding-bottom:0;max-width:480px}
+}
 </style>
 </head>
 <body>
@@ -386,6 +433,8 @@ const ROADS = [ // schematic, approximate
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+const isDesk = () => window.matchMedia('(min-width:1024px)').matches; // desktop layout (PARS-5)
+const DESK_PANEL = 396; // right side panel (380px) + its 16px margin: keep in sync with --panel-w in the CSS
 const byId = id => VENUES.find(v => v.id === id);
 const hash = str => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 const rnd = seed => { let t = (seed + 0x6D2B79F5) >>> 0; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -546,6 +595,7 @@ const ICONS = {
    ============================================================ */
 let toastT;
 function placeToast() {
+  if (isDesk()) { $('#toast').style.bottom = 'calc(32px + env(safe-area-inset-bottom,0px))'; return; }
   const sl = $('#slot'), extra = (S.tab === 'map' && sl && sl.offsetHeight) ? sl.offsetHeight + 12 : 0;
   $('#toast').style.bottom = `calc(var(--nav-h) + 28px + ${extra}px + env(safe-area-inset-bottom,0px))`;
 }
@@ -594,7 +644,7 @@ function closeDialog(silent) {
 $('#brand').innerHTML = `<button type="button" id="brandBtn" aria-label="Meet the team" style="display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;color:inherit;cursor:pointer;font:inherit">${paw(30, 24)}<b>party animals</b></button>`;
 const NAV = [['map','map'],['venues','venues'],['party','party'],['friends','friends'],['me','me']];
 $('#nav').innerHTML = NAV.map(([id, label]) => id === 'party'
-  ? `<button type="button" class="party" id="partyBtn" aria-label="Party mode" aria-pressed="false">${paw(34, 27)}</button>`
+  ? `<button type="button" class="party" id="partyBtn" aria-label="Party mode" aria-pressed="false">${paw(34, 27)}<span class="lbl">party mode</span></button>`
   : `<button type="button" data-tab="${id}">${ICONS[id]}<span>${label}</span></button>`).join('');
 $('#brandBtn').addEventListener('click', () => setTab('team'));
 $('#nav').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) setTab(b.dataset.tab); });
@@ -694,7 +744,7 @@ function applyView(anim) {
   if (anim) { world.classList.add('anim'); setTimeout(() => world.classList.remove('anim'), 420); }
   world.style.transform = `translate(${view.tx}px,${view.ty}px) scale(${view.s})`;
   world.style.setProperty('--inv', String(1 / view.s));
-  mapEl.classList.toggle('labels', view.s >= view.s0 * 1.8);
+  mapEl.classList.toggle('labels', view.s >= view.s0 * (isDesk() ? 1.15 : 1.8));
   const ht = $('#heat'); if (ht) ht.style.opacity = String(clamp(1 - (view.s / view.s0 - 1) * 0.14, 0.35, 1));
   if (Math.abs(view.s - lastLayoutS) > 1e-4) scheduleLayout();
 }
@@ -705,9 +755,17 @@ function clampView() {
 }
 function sizeMap(keep) {
   const r = mapEl.getBoundingClientRect(); if (!r.width || !r.height) return;
-  const availH = r.height - 64 - 160, s0 = Math.min((r.width - 64) / WW, Math.max(availH, 200) / WH);
+  let s0, fx, fy;
+  if (isDesk()) { // desktop: fit the whole map in the area to the left of the side panel
+    const aw = Math.max(r.width - DESK_PANEL - 32, 320), ah = Math.max(r.height - 32, 240);
+    s0 = Math.min(aw / WW, ah / WH); fx = 16 + (aw - WW * s0) / 2; fy = 16 + (ah - WH * s0) / 2;
+  } else { // mobile: unchanged
+    const availH = r.height - 64 - 160;
+    s0 = Math.min((r.width - 64) / WW, Math.max(availH, 200) / WH);
+    fx = (r.width - 64 - WW * s0) / 2; fy = 64 + (Math.max(availH, 200) - WH * s0) / 2;
+  }
   const ratio = keep ? view.s / view.s0 : 1; view.s0 = s0;
-  if (!keep) { view.s = s0; view.tx = (r.width - 64 - WW * s0) / 2; view.ty = 64 + (Math.max(availH, 200) - WH * s0) / 2; }
+  if (!keep) { view.s = s0; view.tx = fx; view.ty = fy; }
   else { view.s = clamp(s0 * ratio, s0 * 0.8, s0 * 6); clampView(); }
   applyView();
 }
@@ -716,9 +774,9 @@ function zoomAt(f, cx, cy, anim) {
   view.tx = cx - (cx - view.tx) * k; view.ty = cy - (cy - view.ty) * k; view.s = ns; clampView(); applyView(anim);
 }
 function focusOn(v, anim = true) {
-  const r = mapEl.getBoundingClientRect(), p = proj(v.lat, v.lng);
+  const r = mapEl.getBoundingClientRect(), p = proj(v.lat, v.lng), d = isDesk();
   view.s = Math.max(view.s, view.s0 * 2.6);
-  view.tx = r.width / 2 - p.x * view.s; view.ty = r.height * 0.34 - p.y * view.s; clampView(); applyView(anim);
+  view.tx = (d ? (r.width - DESK_PANEL) / 2 : r.width / 2) - p.x * view.s; view.ty = r.height * (d ? 0.5 : 0.34) - p.y * view.s; clampView(); applyView(anim);
 }
 $('#zin').addEventListener('click', () => { const r = mapEl.getBoundingClientRect(); zoomAt(1.5, r.width / 2, r.height / 2, true); });
 $('#zout').addEventListener('click', () => { const r = mapEl.getBoundingClientRect(); zoomAt(1 / 1.5, r.width / 2, r.height / 2, true); });
@@ -767,7 +825,8 @@ function selectVenue(id, center = true) {
     if (S.tab !== 'map') setTab('map');
     const v = byId(id), r = mapEl.getBoundingClientRect(), p = proj(v.lat, v.lng);
     const sx = view.tx + p.x * view.s, sy = view.ty + p.y * view.s;
-    if (center || sy > r.height - 340 || sy < 110 || sx < 30 || sx > r.width - 30) focusOn(v);
+    const d = isDesk();
+    if (center || (d ? (sy > r.height - 60 || sy < 60 || sx < 30 || sx > r.width - DESK_PANEL - 30) : (sy > r.height - 340 || sy < 110 || sx < 30 || sx > r.width - 30))) focusOn(v);
   }
   scheduleLayout(); renderSlot(); renderList(false);
 }
@@ -851,6 +910,7 @@ function setLayer(l) {
   updateMap(); renderSlot();
 }
 document.querySelector('.layer').addEventListener('click', e => { const b = e.target.closest('[data-layer]'); if (b) setLayer(b.dataset.layer); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !dlg && S.tab === 'map' && S.selected) selectVenue(null); }); // desktop: Esc closes the venue card
 
 /* ---------- demo director (presenter tools) ---------- */
 let playT = null;
@@ -864,7 +924,7 @@ function togglePlay() {
 }
 let dirShift = 0;
 function shiftMap(dy) { view.ty += dy; clampView(); applyView(true); }
-function openDirector() { if (S.dir) return; S.dir = true; slotKey = ''; if (S.tab !== 'map') setTab('map'); renderSlot(); dirShift = 90; shiftMap(-dirShift); }
+function openDirector() { if (S.dir) return; S.dir = true; slotKey = ''; if (S.tab !== 'map') setTab('map'); renderSlot(); dirShift = isDesk() ? 0 : 90; if (dirShift) shiftMap(-dirShift); }
 function closeDirector() { S.dir = false; slotKey = ''; stopPlay(); renderSlot(); if (dirShift) { shiftMap(dirShift); dirShift = 0; } }
 function directorHTML() {
   return `<div class="dir" role="group" aria-label="Demo director">
